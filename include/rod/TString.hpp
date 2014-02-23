@@ -94,7 +94,7 @@ namespace rod
 		public:
 			using r = typename Reduce< AppendChar, TString<>, TString< chars >... >::r;
 		};
-		
+
 	}
 
 
@@ -193,5 +193,4 @@ namespace rod
 														ROD_TString_Extract( (str), 60 ), \
 														ROD_TString_Extract( (str), 61 ), \
 														ROD_TString_Extract( (str), 62 ), \
-														ROD_TString_Extract( (str), 63 ), \
-														ROD_TString_Extract( (str), 64 ) >::r
+														ROD_TString_Extract( (str), 63 ) >::r
