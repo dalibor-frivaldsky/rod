@@ -2,11 +2,8 @@
 
 
 #include <rod/Contextual.hpp>
-#include <rod/Method.hpp>
 #include <rod/TString.hpp>
-#include <rod/configuration/Component.hpp>
-#include <rod/configuration/parser/ComponentElement.hpp>
-#include <rod/configuration/parser/InterfaceElement.hpp>
+#include <rod/configuration/annotation/ContextConfiguration.hpp>
 #include <rod/xml/annotation/Attributes.hpp>
 #include <rod/xml/annotation/ChildElement.hpp>
 #include <rod/xml/annotation/Element.hpp>
@@ -32,26 +29,37 @@ namespace rod
 
 				using This = ContextElement< Context >;
 
+				template< typename Configuration >
+				struct GenerateChildElement
+				{
+					using r = xml::annotation::ChildElement<
+									Configuration::XmlConfigurationElement::template XmlElement >;
+				};
+
+				template< typename Configurations >
+				struct GenerateElement;
+
+				template< typename... Configuration >
+				struct GenerateElement< TypeList< Configuration... > >
+				{
+					using r = xml::annotation::Element
+					<
+						ROD_TString( "context" ),
+						xml::annotation::Attributes<>,
+						common::NullType,
+						typename GenerateChildElement< Configuration >::r...
+					>;
+				};
+
 
 			public:
 
 				using RootElement = xml::annotation::RootElement;
 
 
-				using Element = xml::annotation::Element
-				<
-					ROD_TString( "context" ),
-					xml::annotation::Attributes<>,
-					common::NullType,
-					xml::annotation::ChildElement
-					<
-						ComponentElement
-					>,
-					xml::annotation::ChildElement
-					<
-						InterfaceElement
-					>
-				>;
+				using Element =
+						typename GenerateElement<
+								typename This::template FindAnnotated< annotation::IsContextConfiguration >::r >::r;
 
 			};
 			
