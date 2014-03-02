@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include <rod/common/MakeVoid.hpp>
+#include <rod/Annotation.hpp>
 
 
 
@@ -15,25 +15,7 @@ namespace rod
 		struct Component
 		{};
 
-
-		template< typename NotAnnotated, typename = void >
-		struct HasComponentAnnotation
-		{
-			enum { r = false };
-		};
-
-		template< typename Annotated >
-		struct HasComponentAnnotation< Annotated, typename common::MakeVoid< typename Annotated::Component >::r >
-		{
-			enum { r = true };
-		};
-
-
-		template< typename Type >
-		struct IsComponent
-		{
-			enum { r = HasComponentAnnotation< Type >::r };
-		};
+		ROD_Annotation( Component )
 		
 	}
 	

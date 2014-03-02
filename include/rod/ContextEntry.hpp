@@ -3,10 +3,12 @@
 
 #include <functional>
 #include <string>
+#include <tuple>
+#include <utility>
 
 #include <rod/Context.hpp>
-#include <rod/configuration/Configuration.hpp>
-#include <rod/holder/SingletonHolder.hpp>
+#include <rod/Contextual.hpp>
+#include <rod/configuration/ConfigurationReader.hpp>
 
 
 
@@ -14,36 +16,35 @@
 namespace rod
 {
 
-	template< template< typename > class ContextualRoot >
-	class ContextEntry
+	template< typename Context >
+	class Rod:
+		public Contextual< Context >
 	{
-
 	public:
 
-		using RootContext = CreateContext::r;
-		
-
-		ContextEntry( const std::string& xmlConfigurationPath = "" ):
-		  config( xmlConfigurationPath )
-		{
-			rootContext.setConfig( std::ref( this->config ) );
-		}
-
+		template< template< typename > class Domain >
 		void
-		enter()
+		enter( const std::string& configurationFilePath )
 		{
-			using contextualRootContext = typename RootContext::template CreateChildContext< TypeList<> >::r;
-			using boundContextualRoot = ContextualRoot< contextualRootContext >;
-
-			boundContextualRoot		contextualRoot;
-			contextualRoot.bindToParentContext( this->rootContext );
-			contextualRoot.enter();
+			auto	configurations = create< configuration::ConfigurationReader >( this )->read( configurationFilePath );
+			create< Domain >( this, std::move( std::get< 0 >( configurations ) ), std::move( std::get< 1 >( configurations ) ) )->enter();
 		}
-
-
-		configuration::Configuration<>	config;
-		RootContext						rootContext;
-	
 	};
+
+
+	template< template< typename > class Domain >
+	void
+	enter( const std::string& configurationFilePath )
+	{
+		using rootContext = CreateContext::r;
+		using rodContext = typename rootContext::template CreateChildContext< TypeList<> >::r;
+		using boundRodContextual = Rod< rodContext >;
+
+		rootContext			rootContextInstance;
+		boundRodContextual	rodContextual;
+
+		rodContextual.bindToParentContext( rootContextInstance );
+		rodContextual.enter< Domain >( configurationFilePath );
+	}
 	
 }

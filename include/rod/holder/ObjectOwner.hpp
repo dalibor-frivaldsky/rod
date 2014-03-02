@@ -23,7 +23,7 @@ namespace rod
 				Type	object;
 
 				Container( Type&& object ):
-				  object( object )
+				  object( std::forward< Type >( object ) )
 				{}
 			};
 

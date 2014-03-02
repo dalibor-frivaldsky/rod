@@ -14,7 +14,6 @@
 #include <rod/annotation/AutoResolve.hpp>
 #include <rod/annotation/ContextualRecord.hpp>
 #include <rod/common/TypeName.hpp>
-#include <rod/configuration/Configuration.hpp>
 
 
 
@@ -87,6 +86,11 @@ namespace rod
 			this->context.bindToParent( parentContext );
 		}
 
+		template< template< typename > class ToBind >
+		ToBind< typename Context::template CreateChildContext< TypeList<> >::r >
+		bind()
+		{}
+
 		template< template< typename > class ToCreate, typename... ContextualComponent >
 		std::unique_ptr<
 			ToCreate<
@@ -131,5 +135,27 @@ namespace rod
 		}
 
 	};
+
+
+	template< template< typename > class ToBind, typename BindingContextual >
+	auto
+	bind( BindingContextual* bindingContextual )
+		-> decltype( bindingContextual->template bind< ToBind >() )
+	{}
+
+	template< template< typename > class ToCreate, typename BoundContextual, typename... ContextualComponent >
+	auto
+	create( BoundContextual* boundContextual, ContextualComponent&&... contextualComponent )
+		-> decltype( boundContextual->template create< ToCreate >( std::forward< ContextualComponent >( contextualComponent )... ) )
+	{
+		return boundContextual->template create< ToCreate >( std::forward< ContextualComponent >( contextualComponent )... );
+	}
+
+	template< typename ToResolve, typename BindingContextual >
+	ToResolve&
+	resolve( BindingContextual* bindingContextual )
+	{
+		return bindingContextual->template resolve< ToResolve >();
+	}
 	
 }

@@ -28,6 +28,13 @@ namespace rod
 		{
 			return (obj.*m)( std::forward< Args_ >( args )... );
 		}
+
+		static
+		Return
+		call( Class* obj, Args_&&... args )
+		{
+			return (obj->*m)( std::forward< Args_ >( args )... );
+		}
 	};
 
 

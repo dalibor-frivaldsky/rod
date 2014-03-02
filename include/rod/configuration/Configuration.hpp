@@ -11,8 +11,8 @@
 
 #include <rapidxml.hpp>
 
-#include <rod/configuration/ComponentConfig.hpp>
-#include <rod/configuration/InterfaceConfig.hpp>
+#include <rod/configuration/Component.hpp>
+#include <rod/configuration/Interface.hpp>
 
 
 
@@ -30,8 +30,8 @@ namespace rod
 		private:
 
 			using XmlContent = std::unique_ptr< CharType[] >;
-			using ComponentConfigMap = std::map< std::string, ComponentConfig >;
-			using InterfaceConfigMap = std::map< std::string, InterfaceConfig >;
+			using ComponentConfigMap = std::map< std::string, Component >;
+			using InterfaceConfigMap = std::map< std::string, Interface >;
 
 			using XmlDocument = rapidxml::xml_document< CharType >;
 			using XmlNode = rapidxml::xml_node< CharType >;
@@ -138,7 +138,7 @@ namespace rod
 					std::string		cls = componentNode->first_attribute( "class" )->value();
 					std::string		id = componentNode->first_attribute( "id" )->value();
 
-					componentConfigMap.emplace( cls, ComponentConfig( cls, id ) );
+					componentConfigMap.emplace( cls, Component( cls, id ) );
 
 					componentNode = componentNode->next_sibling( "component" );
 				}
@@ -154,7 +154,7 @@ namespace rod
 					std::string		cls = interfaceNode->first_attribute( "class" )->value();
 					std::string		providedById = interfaceNode->first_node( "provided-by" )->value();
 
-					interfaceConfigMap.emplace( cls, InterfaceConfig( cls, providedById ) );
+					interfaceConfigMap.emplace( cls, Interface( cls, providedById ) );
 
 					interfaceNode = interfaceNode->next_sibling( "interface" );
 				}

@@ -12,7 +12,7 @@ namespace rod
 	namespace configuration
 	{
 
-		class ComponentConfig
+		class Component
 		{
 
 		public:
@@ -21,7 +21,13 @@ namespace rod
 			std::string		id;
 
 
-			ComponentConfig( const std::string& cls, const std::string& id ):
+		public:
+
+			inline
+			Component() = default;
+
+			template< typename StringType >
+			Component( StringType&& cls, StringType&& id ):
 			  cls( cls ),
 			  id( id )
 			{}

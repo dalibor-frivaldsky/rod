@@ -3,6 +3,7 @@
 
 #include <exception>
 #include <functional>
+#include <map>
 #include <memory>
 #include <tuple>
 #include <type_traits>
@@ -20,7 +21,6 @@
 #include <rod/common/Select.hpp>
 #include <rod/common/Sequence.hpp>
 #include <rod/common/TypeName.hpp>
-#include <rod/configuration/Configuration.hpp>
 #include <rod/debug/Inspect.hpp>
 #include <rod/holder/ObjectOwner.hpp>
 #include <rod/holder/ObjectReference.hpp>
@@ -474,8 +474,7 @@ namespace rod
 	private:
 
 		using This = Context< ParentCtx, ContextDef >;
-		using ConfigRef = std::reference_wrapper< configuration::Configuration<> >;
-
+		
 
 		template< typename ParentC, typename ContextD >
 		friend struct Context;
@@ -483,8 +482,7 @@ namespace rod
 
 		ParentContext*				parentContext = nullptr;
 		typename This::Container	container;
-		ConfigRef					config = std::ref( configuration::NullConfiguration<>::value() );
-
+		
 
 	public:
 
@@ -567,12 +565,6 @@ namespace rod
 		}
 
 
-		void
-		setConfig( const ConfigRef& config )
-		{
-			this->config = config;
-		}
-
 		template< typename... Component >
 		void
 		injectComponents( Component&&... component )
@@ -587,8 +579,7 @@ namespace rod
 		bindToParent( ParentContext& parentContext )
 		{
 			this->parentContext = &parentContext;
-			this->config = parentContext.config;
-
+			
 			using singletons = typename This::Container::template Select< holder::SingletonSelector >::r;
 			context::CreateNewContextObjects< singletons >::create( *this );
 		}
@@ -616,7 +607,7 @@ namespace rod
 		{
 			std::string		toGetName = common::typeName< ToResolve >();
 
-			if( config.get().interfaceIsConfigured( toGetName ) )
+			/*if( config.get().interfaceIsConfigured( toGetName ) )
 			{
 				auto	configuredImplementors = context::FindConfiguredImplementors< ToResolve >::find( *this, config.get() );
 				auto	implementorIt = configuredImplementors.find(
@@ -634,12 +625,12 @@ namespace rod
 				}
 			}
 			else
-			{
+			{*/
 				using implementors = typename This::template FindImplementors< ToResolve >::r;
 				using implementor = typename implementors::Head::r;
 				
 				return this->template retrieve< implementor >();
-			}
+			//}
 		}
 
 

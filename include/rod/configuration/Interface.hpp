@@ -12,7 +12,7 @@ namespace rod
 	namespace configuration
 	{
 
-		class InterfaceConfig
+		class Interface
 		{
 
 		public:
@@ -21,9 +21,8 @@ namespace rod
 			std::string		providedById;
 
 
-			InterfaceConfig( const std::string& cls, const std::string& providedById ):
-			  cls( cls ),
-			  providedById( providedById )
+			Interface( const std::string& cls ):
+			  cls( cls )
 			{}
 
 		};
