@@ -12,7 +12,7 @@ namespace rod
 		namespace annotation
 		{
 
-			template< template< typename > class Element_, typename ProcessMethod_ >
+			template< template< typename > class Element_, typename ProcessMethod_ = common::NullType >
 			struct ChildElement
 			{
 				template< typename T >

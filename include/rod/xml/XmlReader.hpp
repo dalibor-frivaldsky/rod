@@ -34,13 +34,28 @@ namespace rod
 			struct ProcessElement;
 
 
-			template< typename Attributes, typename ReturnType >
+			template< typename Attributes, typename ProcessMethod >
 			struct
-			CallProcessSelf;
+			TryCallProcessSelf;
+
+			template< typename Attributes >
+			struct
+			TryCallProcessSelf< Attributes, common::NullType >
+			{
+				template< typename BoundElement >
+				static
+				std::tuple<>
+				call( BoundElement*, XmlNode* )
+				{
+					return std::make_tuple();
+				}
+			};
+
+			template< typename Attributes, typename Return >
+			struct CallProcessSelf;
 
 			template< typename... Attribute >
-			struct
-			CallProcessSelf< annotation::Attributes< Attribute... >, void >
+			struct CallProcessSelf< annotation::Attributes< Attribute... >, void >
 			{
 				template< typename BoundElement >
 				static
@@ -56,15 +71,14 @@ namespace rod
 			};
 
 			template< typename... Attribute, typename Return >
-			struct
-			CallProcessSelf< annotation::Attributes< Attribute... >, Return >
+			struct CallProcessSelf< annotation::Attributes< Attribute... >, Return >
 			{
 				template< typename BoundElement >
 				static
-				std::tuple< typename BoundElement::Element::ProcessMethod::Return >
+				std::tuple< Return >
 				call( BoundElement* element, XmlNode* node )
 				{
-					using returnTuple = std::tuple< typename BoundElement::Element::ProcessMethod::Return >;
+					using returnTuple = std::tuple< Return >;
 
 					return returnTuple(
 								BoundElement::Element::ProcessMethod::call(
@@ -73,16 +87,30 @@ namespace rod
 				}
 			};
 
+			template< typename Attributes, typename ProcessMethod >
+			struct
+			TryCallProcessSelf
+			{
+				template< typename BoundElement >
+				static
+				auto
+				call( BoundElement* element, XmlNode* node )
+					-> decltype( CallProcessSelf< Attributes, typename ProcessMethod::Return >::call( element, node ) )
+				{
+					return CallProcessSelf< Attributes, typename ProcessMethod::Return >::call( element, node );
+				}
+			};
+
 			template< typename BoundElement >
 			auto
 			callProcessSelf( BoundElement* element, XmlNode* node )
-				-> decltype( CallProcessSelf<
+				-> decltype( TryCallProcessSelf<
 								typename BoundElement::Element::Attributes,
-								typename BoundElement::Element::ProcessMethod::Return >::call( element, node ) )
+								typename BoundElement::Element::ProcessMethod >::call( element, node ) )
 			{
-				return CallProcessSelf<
+				return TryCallProcessSelf<
 							typename BoundElement::Element::Attributes,
-							typename BoundElement::Element::ProcessMethod::Return >::call( element, node );
+							typename BoundElement::Element::ProcessMethod >::call( element, node );
 			}
 
 
@@ -150,6 +178,32 @@ namespace rod
 								element,
 								selfResult,
 								ProcessElement< ChildElementImpl >::process( ctx, node ) );
+					}
+					else
+					{
+						ProcessChildren< TypeList< Rest... > >::process( ctx, element, selfResult, node );
+					}
+				}
+			};
+
+			template< template< typename > class ChildElementImpl, typename... Rest >
+			struct
+			ProcessChildren<
+				TypeList<
+					annotation::ChildElement< ChildElementImpl, common::NullType >,
+					Rest... > >
+			{
+				template< typename Contextual, typename BoundElement, typename SelfResult >
+				static
+				void
+				process( Contextual* ctx, BoundElement* element, SelfResult& selfResult, XmlNode* node )
+				{
+					if( node->type() == rapidxml::node_element &&
+						decltype( bind< ChildElementImpl >( ctx ) )::Element::Name::toString() == node->name() )
+					{
+						std::cout << "element node" << std::endl;
+
+						ProcessElement< ChildElementImpl >::process( ctx, node );
 					}
 					else
 					{

@@ -38,34 +38,18 @@ namespace rod
 				using RootElement = xml::annotation::RootElement;
 
 
-				void
-				processSelf()
-				{
-					std::cout << "ContextElement::processSelf" << std::endl;
-				}
-
-				void
-				processComponent()
-				{}
-
-				void
-				processInterface( Interface& )
-				{}
-
 				using Element = xml::annotation::Element
 				<
 					ROD_TString( "context" ),
 					xml::annotation::Attributes<>,
-					ROD_Method( This::processSelf ),
+					common::NullType,
 					xml::annotation::ChildElement
 					<
-						ComponentElement,
-						ROD_Method( This::processComponent )
+						ComponentElement
 					>,
 					xml::annotation::ChildElement
 					<
-						InterfaceElement,
-						ROD_Method( This::processInterface )
+						InterfaceElement
 					>
 				>;
 

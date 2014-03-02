@@ -43,9 +43,7 @@ namespace rod
 					std::cout << "InterfaceElement::processSelf(" << cls << ")" << std::endl;
 
 					auto&	interfaces = resolve< Interfaces >( this );
-					auto&	interface = interfaces.configure( Interface( cls ) );
-					interface.providedById = "aaa";
-					return interface;
+					return interfaces.configure( Interface( cls ) );
 				}
 
 				void
