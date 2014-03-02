@@ -40,16 +40,13 @@ namespace rod
 				Interface&
 				processSelf( std::string&& cls )
 				{
-					std::cout << "InterfaceElement::processSelf(" << cls << ")" << std::endl;
-
 					auto&	interfaces = resolve< Interfaces >( this );
-					return interfaces.configure( Interface( cls ) );
+					return interfaces.configure( Interface( std::move( cls ) ) );
 				}
 
 				void
 				processProvidedBy( Interface& interface, std::string&& providedBy )
 				{
-					std::cout << interface.cls << " provided by " << providedBy << std::endl;
 					interface.providedById = providedBy;
 				}
 

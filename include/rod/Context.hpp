@@ -21,6 +21,8 @@
 #include <rod/common/Select.hpp>
 #include <rod/common/Sequence.hpp>
 #include <rod/common/TypeName.hpp>
+#include <rod/configuration/Components.hpp>
+#include <rod/configuration/Interfaces.hpp>
 #include <rod/debug/Inspect.hpp>
 #include <rod/holder/ObjectOwner.hpp>
 #include <rod/holder/ObjectReference.hpp>
@@ -386,16 +388,16 @@ namespace rod
 					return 0;
 				}
 
-				template< typename Implementor, typename Config >
+				template< typename Implementor >
 				static
 				std::string
-				getImplementorId( Config& config )
+				getImplementorId( configuration::Components& componentConfig )
 				{
 					std::string		implementorName = common::typeName< Implementor >();
 
-					if( config.componentIsConfigured( implementorName ) )
+					if( componentConfig.isConfigured( implementorName ) )
 					{
-						return config.getComponentConfiguration( implementorName ).id;
+						return componentConfig.getConfiguration( implementorName ).id;
 					}
 					else
 					{
@@ -411,10 +413,10 @@ namespace rod
 					return context.template retrieve< Implementor >();
 				}
 
-				template< typename Context, typename Config >
+				template< typename Context >
 				static
 				std::map< std::string, Interface& >
-				extract( Context& context, Config& config )
+				extract( Context& context )
 				{
 					std::map< std::string, Interface& >		configuredImplementors;
 
@@ -422,7 +424,7 @@ namespace rod
 					{
 						addToMap(
 							configuredImplementors,
-							getImplementorId< Implementors >( config ),
+							getImplementorId< Implementors >( context.template retrieve< configuration::Components >() ),
 							getImplementor< Implementors >( context ) )...
 					};
 					
@@ -433,14 +435,14 @@ namespace rod
 			
 
 		public:
-			template< typename Context, typename Config >
+			template< typename Context >
 			static
 			std::map< std::string, Interface& >
-			find( Context& context, Config& config )
+			find( Context& context )
 			{
 				using allImplementors = typename Context::template FindImplementors< Interface >::r;
 
-				return ExtractConfigured< allImplementors >::extract( context, config );
+				return ExtractConfigured< allImplementors >::extract( context );
 			}
 		};
 
@@ -605,13 +607,14 @@ namespace rod
 		ToResolve&
 		resolve()
 		{
-			std::string		toGetName = common::typeName< ToResolve >();
+			std::string					toGetName = common::typeName< ToResolve >();
+			configuration::Interfaces&	interfacesConfig = this->template retrieve< configuration::Interfaces >();
 
-			/*if( config.get().interfaceIsConfigured( toGetName ) )
+			if( interfacesConfig.isConfigured( toGetName ) )
 			{
-				auto	configuredImplementors = context::FindConfiguredImplementors< ToResolve >::find( *this, config.get() );
+				auto	configuredImplementors = context::FindConfiguredImplementors< ToResolve >::find( *this );
 				auto	implementorIt = configuredImplementors.find(
-											config.get().getInterfaceConfiguration( toGetName ).providedById );
+											interfacesConfig.getConfiguration( toGetName ).providedById );
 
 				if( implementorIt == configuredImplementors.end() )
 				{
@@ -625,12 +628,12 @@ namespace rod
 				}
 			}
 			else
-			{*/
+			{
 				using implementors = typename This::template FindImplementors< ToResolve >::r;
 				using implementor = typename implementors::Head::r;
 				
 				return this->template retrieve< implementor >();
-			//}
+			}
 		}
 
 

@@ -152,7 +152,6 @@ namespace rod
 				void
 				process( Contextual* ctx, BoundElement* element, SelfResult& selfResult, XmlNode* node )
 				{
-					std::cout << node->type() << std::endl;
 					// silently ignore undefined element
 				}
 			};
@@ -172,8 +171,6 @@ namespace rod
 					if( node->type() == rapidxml::node_element &&
 						decltype( bind< ChildElementImpl >( ctx ) )::Element::Name::toString() == node->name() )
 					{
-						std::cout << "element node" << std::endl;
-
 						callProcessChild< ProcessMethod >(
 								element,
 								selfResult,
@@ -201,8 +198,6 @@ namespace rod
 					if( node->type() == rapidxml::node_element &&
 						decltype( bind< ChildElementImpl >( ctx ) )::Element::Name::toString() == node->name() )
 					{
-						std::cout << "element node" << std::endl;
-
 						ProcessElement< ChildElementImpl >::process( ctx, node );
 					}
 					else
@@ -226,8 +221,6 @@ namespace rod
 				{
 					if( node->type() == rapidxml::node_data )
 					{
-						std::cout << "data node" << std::endl;
-
 						callProcessChild< ProcessMethod >(
 								element,
 								selfResult,

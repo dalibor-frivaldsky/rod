@@ -38,14 +38,12 @@ namespace rod
 				std::string
 				processSelf()
 				{
-					std::cout << "ProvidedByElement::processSelf()" << std::endl;
 					return std::string();
 				}
 
 				void
 				processData( std::string& result, std::string&& providedBy )
 				{
-					std::cout << "provide-by: " << providedBy << std::endl;
 					result += providedBy;
 				}
 

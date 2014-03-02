@@ -21,7 +21,7 @@ namespace rod
 			std::string		providedById;
 
 
-			Interface( const std::string& cls ):
+			Interface( std::string&& cls ):
 			  cls( cls )
 			{}
 

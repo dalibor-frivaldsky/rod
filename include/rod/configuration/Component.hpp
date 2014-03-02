@@ -23,11 +23,7 @@ namespace rod
 
 		public:
 
-			inline
-			Component() = default;
-
-			template< typename StringType >
-			Component( StringType&& cls, StringType&& id ):
+			Component( std::string&& cls, std::string&& id ):
 			  cls( cls ),
 			  id( id )
 			{}

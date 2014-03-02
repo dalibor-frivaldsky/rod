@@ -42,7 +42,7 @@ namespace rod
 			}
 
 			const Interface&
-			getInterfaceConfiguration( const std::string& className ) const
+			getConfiguration( const std::string& className ) const
 			{
 				return interfaceMap.find( className )->second;
 			}

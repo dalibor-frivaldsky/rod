@@ -39,10 +39,8 @@ namespace rod
 				void
 				processSelf( std::string&& id, std::string&& cls )
 				{
-					std::cout << "ComponentElement::processSelf(" << id << "," << cls << ")" << std::endl;
-
 					auto&	components = resolve< Components >( this );
-					components.configure( Component( id, cls ) );
+					components.configure( Component( std::move( cls ), std::move( id ) ) );
 				}
 
 				using Element = xml::annotation::Element
