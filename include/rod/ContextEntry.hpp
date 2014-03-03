@@ -8,6 +8,7 @@
 
 #include <rod/Context.hpp>
 #include <rod/Contextual.hpp>
+#include <rod/common/Sequence.hpp>
 #include <rod/configuration/ConfigurationReader.hpp>
 
 
@@ -20,21 +21,38 @@ namespace rod
 	class Rod:
 		public Contextual< Context >
 	{
+	private:
+
+		template< template< typename > class Domain, typename InitialObjectsTuple, int... Seq >
+		void
+		enterDomainSequential( InitialObjectsTuple&& initialObjects, common::Sequence< Seq... >&& )
+		{
+			create< Domain >( this, std::get< Seq >( std::move( initialObjects ) )... )->enter();
+		}
+
+		template< template< typename > class Domain, typename... InitialObject >
+		void
+		enterDomain( std::tuple< InitialObject... >&& initialObjects )
+		{
+			using seq = typename common::GenerateSequence< sizeof...( InitialObject ) >::r;
+			enterDomainSequential< Domain >( std::move( initialObjects ), seq() );
+		}
+
+
 	public:
 
 		template< template< typename > class Domain >
 		void
 		enter( const std::string& configurationFilePath )
 		{
-			auto	configurations = create< configuration::ConfigurationReader >( this )->read( configurationFilePath );
-			create< Domain >( this, std::move( std::get< 0 >( configurations ) ), std::move( std::get< 1 >( configurations ) ) )->enter();
+			enterDomain< Domain >( create< configuration::ConfigurationReader >( this )->read( configurationFilePath ) );
 		}
 	};
 
 
 	template< template< typename > class Domain >
 	void
-	enter( const std::string& configurationFilePath )
+	enter( const std::string& configurationFilePath = "" )
 	{
 		using rootContext = CreateContext::r;
 		using rodContext = typename rootContext::template CreateChildContext< TypeList<> >::r;

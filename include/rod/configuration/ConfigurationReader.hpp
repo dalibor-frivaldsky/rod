@@ -72,13 +72,16 @@ namespace rod
 
 		public:
 
-			std::tuple< Components, Interfaces >
+			ConfigurationsTuple
 			read( const std::string& configurationFilePath )
 			{
 				ConfigurationsTuple		configurations;
-				xml::FileXmlContent		configurationFileContent( configurationFilePath );
 
-				readConfiguration( configurationFileContent, configurations );
+				if( configurationFilePath.empty() == false )
+				{
+					xml::FileXmlContent		configurationFileContent( configurationFilePath );
+					readConfiguration( configurationFileContent, configurations );
+				}
 
 				return std::move( configurations );
 			}

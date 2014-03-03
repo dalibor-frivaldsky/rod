@@ -607,14 +607,14 @@ namespace rod
 		ToResolve&
 		resolve()
 		{
-			std::string					toGetName = common::typeName< ToResolve >();
+			std::string					toResolveName = common::typeName< ToResolve >();
 			configuration::Interfaces&	interfacesConfig = this->template retrieve< configuration::Interfaces >();
 
-			if( interfacesConfig.isConfigured( toGetName ) )
+			if( interfacesConfig.isConfigured( toResolveName ) )
 			{
 				auto	configuredImplementors = context::FindConfiguredImplementors< ToResolve >::find( *this );
 				auto	implementorIt = configuredImplementors.find(
-											interfacesConfig.getConfiguration( toGetName ).providedById );
+											interfacesConfig.getConfiguration( toResolveName ).providedById );
 
 				if( implementorIt == configuredImplementors.end() )
 				{
