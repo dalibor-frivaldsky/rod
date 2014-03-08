@@ -14,6 +14,7 @@
 #include <rod/configuration/parser/ContextElement.hpp>
 #include <rod/xml/FileXmlContent.hpp>
 #include <rod/xml/XmlReader.hpp>
+#include <rod/xml/rapidxml/RapidXml.hpp>
 
 
 
@@ -29,6 +30,7 @@ namespace rod
 			public Contextual<
 					Context,
 					TypeList<
+						xml::rapidxml::RapidXml,
 						AsContextual< parser::ContextElement >,
 						ComponentsConfiguration,
 						InterfacesConfiguration > >
