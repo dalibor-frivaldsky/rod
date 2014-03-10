@@ -1,6 +1,11 @@
 #pragma once
 
 
+#include <cstring>
+#include <memory>
+
+#include <rod/xml/XmlContent.hpp>
+
 #include <rapidxml.hpp>
 
 
