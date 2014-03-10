@@ -331,16 +331,16 @@ namespace rod
 					auto	selfResult = callProcessSelf< ParserProvider, Node >( element.get(), node );
 
 					using	nodeTool = typename ParserProvider::NodeTool;
-					auto	childNode = nodeVar( nodeTool( node ).getFirstChildNode() );
-					using	childNodeArgType = typename xmlReader::NodeArg< decltype( childNode ) >::r;
-					while( nodeTool( childNode ).isValid() )
+					auto	childrenIterator = nodeTool( node ).getChildrenIterator();
+					while( childrenIterator.hasNext() )
 					{
+						auto	childNode = nodeVar( childrenIterator.getNext() );
+						using	childNodeArgType = typename xmlReader::NodeArg< decltype( childNode ) >::r;
+
 						ProcessChildren<
 								ParserProvider,
 								typename boundElement::Element::ChildElements >
 										::template process< childNodeArgType >( ctx, element.get(), selfResult, childNode );
-
-						childNode = nodeVar( nodeTool( childNode ).getNextSibling() );
 					}
 
 					return std::move( selfResult );

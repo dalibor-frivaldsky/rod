@@ -2,6 +2,7 @@
 
 
 #include <rod/xml/XmlNodeType.hpp>
+#include <rod/xml/rapidxml/NodeIterator.hpp>
 
 #include <rapidxml.hpp>
 
@@ -83,17 +84,10 @@ namespace rod
 				}
 
 				inline
-				Node*
-				getFirstChildNode()
+				NodeIterator
+				getChildrenIterator()
 				{
-					return node->first_node();
-				}
-
-				inline
-				Node*
-				getNextSibling()
-				{
-					return node->next_sibling();
+					return NodeIterator( node->first_node() );
 				}
 
 			};
