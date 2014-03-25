@@ -9,6 +9,7 @@
 #include <rod/common/Pair.hpp>
 #include <rod/common/Select.hpp>
 #include <rod/common/SuperSubClass.hpp>
+#include <rod/common/TypeName.hpp>
 
 
 
@@ -476,7 +477,7 @@ namespace rod
 			{
 				PrintTypes()
 				{
-					std::cout << typeid( Head ).name();
+					std::cout << common::typeName< Head >();
 				}
 			};
 
@@ -485,7 +486,7 @@ namespace rod
 			{
 				PrintTypes()
 				{
-					std::cout << typeid( Head ).name() << ",";
+					std::cout << common::typeName< Head >() << ",";
 					PrintTypes< TypeList< Tail... > >();
 				}
 			};
