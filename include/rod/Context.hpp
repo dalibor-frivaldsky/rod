@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include <exception>
+/*#include <exception>
 #include <functional>
 #include <map>
 #include <memory>
@@ -26,7 +26,10 @@
 #include <rod/debug/Inspect.hpp>
 #include <rod/holder/ObjectOwner.hpp>
 #include <rod/holder/ObjectReference.hpp>
-#include <rod/holder/SingletonHolder.hpp>
+#include <rod/holder/SingletonHolder.hpp>*/
+
+
+#include <rod/ContextLevel.hpp>
 
 
 
@@ -34,7 +37,78 @@
 namespace rod
 {
 
+	template< typename... ContextLevels >
+	struct Context;
+
+
 	namespace context
+	{
+
+		template< typename ParentContext >
+		struct ParentContextRef
+		{
+			ParentContext&	parentContext;
+
+			ParentContextRef( ParentContext& parentContext ):
+			  parentContext( parentContext )
+			{}
+		};
+
+	}
+
+
+	template<>
+	struct Context<>
+	{
+		inline
+		Context()
+		{}
+
+		inline
+		~Context()
+		{}
+	};
+
+
+	inline
+	Context<>
+	createNullContext()
+	{
+		return Context<>();
+	}
+
+
+	template< typename... NewType >
+	struct CreateInitialContext
+	{
+		using r = Context< typename CreateContextLevel< NewType... >::r >;
+	};
+
+
+	template< typename CurrentLevel, typename... ParentLevel >
+	struct Context< CurrentLevel, ParentLevel... >:
+		private context::ParentContextRef< Context< ParentLevel... > >,
+		public CurrentLevel
+	{
+	private:
+
+		using This = Context< CurrentLevel, ParentLevel... >;
+	
+
+	public:
+
+		using ParentContext = Context< ParentLevel... >;
+
+
+		Context( ParentContext& parentContext ):
+		  context::ParentContextRef< ParentContext >( parentContext ),
+		  CurrentLevel()
+		{}
+
+	};
+
+
+	/*namespace context
 	{
 
 		struct RootContext
@@ -645,6 +719,6 @@ namespace rod
 		This&
 		operator = ( const This& other );
 
-	};
+	};*/
 
 }

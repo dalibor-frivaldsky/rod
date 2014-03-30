@@ -1,15 +1,19 @@
 #pragma once
 
 
-#include <functional>
-#include <string>
+/*#include <functional>
 #include <tuple>
 #include <utility>
 
 #include <rod/Context.hpp>
 #include <rod/Contextual.hpp>
 #include <rod/common/Sequence.hpp>
-#include <rod/configuration/ConfigurationReader.hpp>
+#include <rod/configuration/ConfigurationReader.hpp>*/
+
+
+#include <string>
+
+#include <rod/Context.hpp>
 
 
 
@@ -17,7 +21,7 @@
 namespace rod
 {
 
-	template< typename Context >
+	/*template< typename Context >
 	class Rod:
 		public Contextual< Context >
 	{
@@ -47,14 +51,14 @@ namespace rod
 		{
 			enterDomain< Domain >( create< configuration::ConfigurationReader >( this )->read( configurationFilePath ) );
 		}
-	};
+	};*/
 
 
 	template< template< typename > class Domain >
 	void
 	enter( const std::string& configurationFilePath = "" )
 	{
-		using rootContext = CreateContext::r;
+		/*using rootContext = CreateContext::r;
 		using rodContext = typename rootContext::template CreateChildContext< TypeList<> >::r;
 		using boundRodContextual = Rod< rodContext >;
 
@@ -62,7 +66,19 @@ namespace rod
 		boundRodContextual	rodContextual;
 
 		rodContextual.bindToParentContext( rootContextInstance );
-		rodContextual.enter< Domain >( configurationFilePath );
+		rodContextual.enter< Domain >( configurationFilePath );*/
+	}
+
+	template< template< typename > class Domain >
+	void
+	enterPlain()
+	{
+		using initialContext = CreateInitialContext<>::r;
+		using boundDomain = Domain< initialContext >;
+
+		auto			nullCtx = createNullContext();
+		boundDomain		domain( nullCtx );
+		domain.enter();
 	}
 	
 }

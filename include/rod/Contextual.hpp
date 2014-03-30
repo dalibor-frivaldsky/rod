@@ -21,7 +21,46 @@
 namespace rod
 {
 
-	namespace contextual
+	template< typename InterimContext, typename... NewType >
+	class Contextual:
+	  public InterimContext
+	{
+	private:
+
+		using This = Contextual< InterimContext, NewType... >;
+
+
+	public:
+
+		using ContextualBase = This;
+
+
+		Contextual( typename InterimContext::ParentContext& parentContext ):
+		  InterimContext( parentContext )
+		{}
+	};
+
+
+#define ROD_Inherit_Contextual_Constructor_Inherit( cls )	using cls< Context >::ContextualBase::Contextual;
+
+#define ROD_Inherit_Contextual_Constructor_Define( cls )	\
+	cls( typename cls< Context >::ParentContext& parentContext ): \
+	  cls< Context >::ContextualBase( parentContext ) \
+	{}
+
+#if defined( __GNUC__ )
+	#if __GNUC__ == 4 && __GNUC_MINOR__ >= 8
+		#define ROD_Inherit_Contextual_Constructor( cls )	ROD_Inherit_Contextual_Constructor_Inherit( cls )
+	#else
+		#define ROD_Inherit_Contextual_Constructor( cls )	ROD_Inherit_Contextual_Constructor_Define( cls )
+	#endif
+#elif defined( _MSC_VER )
+	#define ROD_Inherit_Contextual_Constructor( cls )	ROD_Inherit_Contextual_Constructor_Define( cls )
+#endif
+
+
+
+	/*namespace contextual
 	{
 		template< typename Component >
 		struct MakeToBeInjected
@@ -156,6 +195,6 @@ namespace rod
 	resolve( BindingContextual* bindingContextual )
 	{
 		return bindingContextual->template resolve< ToResolve >();
-	}
+	}*/
 	
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 
+#include <rod/annotation/Component.hpp>
 #include <rod/holder/SingletonHolder.hpp>
 
 
@@ -9,11 +10,13 @@
 namespace rod
 {
 
-	template< typename Component >
+	template< typename Type_ >
 	struct AsSingleton
 	{
-		using Type = Component;
-		using Holder = holder::SingletonOwner< Component >;
+		using Component = annotation::Component;
+
+		using Type = Type_;
+		using Holder = holder::SingletonOwner< Type_ >;
 	};
 	
 }

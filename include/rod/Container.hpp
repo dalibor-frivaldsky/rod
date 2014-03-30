@@ -28,6 +28,31 @@ namespace rod
 		};
 
 
+		template< typename... Holder >
+		struct HolderBase;
+
+		template<>
+		struct HolderBase<>
+		{
+			inline
+			HolderBase()
+			{}
+
+			inline
+			~HolderBase()
+			{}
+		};
+
+		template< typename... Holder >
+		struct HolderBase:
+		  public Holder...
+		{
+			HolderBase():
+			  Holder()...
+			{}
+		};
+
+
 		template< typename ComponentHolder >
 		struct ExtractType
 		{
@@ -42,11 +67,8 @@ namespace rod
 		};
 
 
-		template< typename ComponentDefinitions >
-		struct GenerateContainer;
-
 		template< typename... ComponentDefinition >
-		struct GenerateContainer< TypeList< ComponentDefinition... > >
+		struct GenerateContainer
 		{
 		private:
 			template< typename ComponentDef >
@@ -179,26 +201,27 @@ namespace rod
 	}
 
 
-	template< typename ComponentDefinitions >
+	template< typename... ComponentDefinition >
 	struct CreateContainer
 	{
-		using r = typename container::GenerateContainer< ComponentDefinitions >::r;
+		using r = typename container::GenerateContainer< ComponentDefinition... >::r;
 	};
 
 
 	template< typename... ComponentHolder >
 	struct Container:
-		public container::ExtractHolder< ComponentHolder >::r...
+		public container::HolderBase< typename container::ExtractHolder< ComponentHolder >::r... >
 	{
 	private:
 
 		using This = Container< ComponentHolder... >;
+		using HolderBase = container::HolderBase< typename container::ExtractHolder< ComponentHolder >::r... >;
 
 
 	public:
 
 		Container():
-			ComponentHolder::Holder()...
+			HolderBase()
 		{}
 
 		template< typename Type >
