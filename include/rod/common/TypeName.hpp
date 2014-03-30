@@ -36,7 +36,14 @@ namespace rod
 		typeName()
 		{
 			std::string		typeName = typeid( Type ).name();
-			return typeName.substr( 6 );
+			if( typeName.substr( 0, 5 ) == "class" )
+			{
+				return typeName.substr( 6 );
+			}
+			else
+			{
+				return typeName.substr( 7 );
+			}
 		}
 #endif
 		

@@ -28,16 +28,35 @@ namespace rod
 		};
 
 
+		template< typename ComponentHolder >
+		struct ExtractType
+		{
+			using r = typename ComponentHolder::Type;
+		};
+
+
+		template< typename ComponentHolder >
+		struct ExtractHolder
+		{
+			using r = typename ComponentHolder::Holder;
+		};
+
+
 		template< typename ComponentDefinitions >
 		struct GenerateContainer;
 
 		template< typename... ComponentDefinition >
 		struct GenerateContainer< TypeList< ComponentDefinition... > >
 		{
-			using r = Container<
-						ComponentHolder<
-							typename ComponentDefinition::Type,
-							typename ComponentDefinition::Holder >... >;
+		private:
+			template< typename ComponentDef >
+			struct GenerateComponentHolder
+			{
+				using r = ComponentHolder< typename ComponentDef::Type, typename ComponentDef::Holder >;
+			};
+
+		public:
+			using r = Container< typename GenerateComponentHolder< ComponentDefinition >::r... >;
 		};
 
 
@@ -82,6 +101,16 @@ namespace rod
 				Container< ToMergeComponentHolder... > >
 		{
 			using r = Container< ComponentHolder..., ToMergeComponentHolder... >;
+		};
+
+
+		template< typename Cont >
+		struct ContainedTypes;
+
+		template< typename... ComponentHolder >
+		struct ContainedTypes< Container< ComponentHolder... > >
+		{
+			using r = TypeList< typename ExtractType< ComponentHolder >::r... >;
 		};
 
 
@@ -159,7 +188,7 @@ namespace rod
 
 	template< typename... ComponentHolder >
 	struct Container:
-		public ComponentHolder::Holder...
+		public container::ExtractHolder< ComponentHolder >::r...
 	{
 	private:
 
@@ -176,13 +205,10 @@ namespace rod
 		using Access = container::AccessComponentHolder< This, Type >;
 
 		template< typename ContainerToMerge >
-		using Merge = typename container::Merge< This, ContainerToMerge >;
+		using Merge = container::Merge< This, ContainerToMerge >;
 		
-		struct ContainedTypes
-		{
-			using r = TypeList< typename ComponentHolder::Type... >;
-		};
-
+		using ContainedTypes = container::ContainedTypes< This >;
+		
 		template< template< typename > class Selector >
 		using Select = container::Select< This, Selector >;
 
