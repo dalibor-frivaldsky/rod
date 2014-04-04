@@ -21,6 +21,22 @@
 namespace rod
 {
 
+	namespace contextual
+	{
+
+		template< template< typename > class ToCreate, typename Parent >
+		struct BindContextual
+		{
+		private:
+			using interimContext = typename Parent::Context::template CreateChildContext<>::r;
+
+		public:
+			using r = ToCreate< interimContext >;
+		};
+		
+	}
+
+
 	template< typename InterimContext, typename... NewType >
 	class Contextual:
 	  public InterimContext
@@ -33,29 +49,70 @@ namespace rod
 	public:
 
 		using ContextualBase = This;
+		using Context = InterimContext;
+
+
+		template< template< typename > class Selector >
+		using FindRegisteredType = typename Context::template FindRegisteredType< Selector >;
 
 
 		Contextual( typename InterimContext::ParentContext& parentContext ):
 		  InterimContext( parentContext )
 		{}
+
+
+		template< template< typename > class ToCreate >
+		typename contextual::BindContextual< ToCreate, This >::r
+		create()
+		{
+			using toCreate = typename contextual::BindContextual< ToCreate, This >::r;
+
+			return toCreate( *this );
+		}
+
+		template< template< typename > class ToCreate >
+		typename contextual::BindContextual< ToCreate, This >::r*
+		createPtr()
+		{
+			using toCreate = typename contextual::BindContextual< ToCreate, This >::r;
+
+			return new toCreate( *this );
+		}
 	};
 
 
-#define ROD_Inherit_Contextual_Constructor_Inherit( cls )	using cls< Context >::ContextualBase::Contextual;
+	template< template< typename > class ToCreate, typename Parent >
+	auto
+	create( Parent* parent )
+		-> decltype( parent->template create< ToCreate >() )
+	{
+		return parent->template create< ToCreate >();
+	}
 
-#define ROD_Inherit_Contextual_Constructor_Define( cls )	\
+	template< template< typename > class ToCreate, typename Parent >
+	auto
+	createPtr( Parent* parent )
+		-> decltype( parent->template createPtr< ToCreate >() )
+	{
+		return parent->template createPtr< ToCreate >();
+	}
+
+
+#define ROD_Contextual_Constructor_Inherit( cls )	using cls< Context >::ContextualBase::Contextual;
+
+#define ROD_Contextual_Constructor_Define( cls )	\
 	cls( typename cls< Context >::ParentContext& parentContext ): \
 	  cls< Context >::ContextualBase( parentContext ) \
 	{}
 
 #if defined( __GNUC__ )
 	#if __GNUC__ == 4 && __GNUC_MINOR__ >= 8
-		#define ROD_Inherit_Contextual_Constructor( cls )	ROD_Inherit_Contextual_Constructor_Inherit( cls )
+		#define ROD_Contextual_Constructor( cls )	ROD_Contextual_Constructor_Inherit( cls )
 	#else
-		#define ROD_Inherit_Contextual_Constructor( cls )	ROD_Inherit_Contextual_Constructor_Define( cls )
+		#define ROD_Contextual_Constructor( cls )	ROD_Contextual_Constructor_Define( cls )
 	#endif
 #elif defined( _MSC_VER )
-	#define ROD_Inherit_Contextual_Constructor( cls )	ROD_Inherit_Contextual_Constructor_Define( cls )
+	#define ROD_Contextual_Constructor( cls )	ROD_Contextual_Constructor_Define( cls )
 #endif
 
 

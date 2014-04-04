@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include <string>
+/*#include <string>
 #include <tuple>
 #include <utility>
 
@@ -14,7 +14,12 @@
 #include <rod/configuration/parser/ContextElement.hpp>
 #include <rod/xml/FileXmlContent.hpp>
 #include <rod/xml/XmlReader.hpp>
-#include <rod/xml/rapidxml/RapidXml.hpp>
+#include <rod/xml/rapidxml/RapidXml.hpp>*/
+
+
+#include <rod/Contextual.hpp>
+#include <rod/configuration/ComponentsConfiguration.hpp>
+#include <rod/configuration/InterfacesConfiguration.hpp>
 
 
 
@@ -26,6 +31,53 @@ namespace rod
 	{
 
 		template< typename Context >
+		class ConfigurationReader:
+			public Contextual<
+						Context,
+						ComponentsConfiguration,
+						InterfacesConfiguration >
+		{
+		private:
+
+			using This = ConfigurationReader< Context >;
+
+
+			template< typename Config >
+			struct GetConfiguration
+			{
+				using r = typename Config::Configuration;
+			};
+
+
+			using ConfigurationsTuple =
+					typename This::template FindRegisteredType< annotation::IsContextConfiguration >::r
+						::template Apply< GetConfiguration >::r
+							::template UnpackTo< std::tuple >::r;
+
+
+		public:
+
+			ROD_Contextual_Constructor( ConfigurationReader )
+
+
+			ConfigurationsTuple
+			read( const std::string& configurationFilePath )
+			{
+				ConfigurationsTuple		configurations;
+
+			#if !defined( ROD_NO_XML_CONFIGURATION )
+				/*if( configurationFilePath.empty() == false )
+				{
+					xml::FileXmlContent		configurationFileContent( configurationFilePath );
+					readConfiguration( configurationFileContent, configurations );
+				}*/
+			#endif
+
+				return std::move( configurations );
+			}
+		};
+
+		/*template< typename Context >
 		class ConfigurationReader:
 			public Contextual<
 					Context,
@@ -87,7 +139,7 @@ namespace rod
 
 				return std::move( configurations );
 			}
-		};
+		};*/
 		
 	}
 	

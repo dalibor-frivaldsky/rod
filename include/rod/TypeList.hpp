@@ -153,13 +153,13 @@ namespace rod
 		};
 
 
-		template< typename TypeList, typename ToAdd >
+		template< typename TypeList, typename... ToAdd >
 		struct Append;
 
-		template< typename... Types, typename ToAdd >
-		struct Append< TypeList< Types... >, ToAdd >
+		template< typename... Types, typename... ToAdd >
+		struct Append< TypeList< Types... >, ToAdd... >
 		{
-			using r = TypeList< Types..., ToAdd >;
+			using r = TypeList< Types..., ToAdd... >;
 		};
 
 
@@ -173,13 +173,13 @@ namespace rod
 		};
 
 
-		template< typename TypeList, typename ToAdd >
+		template< typename TypeList, typename... ToAdd >
 		struct Prepend;
 
-		template< typename... Types, typename ToAdd >
-		struct Prepend< TypeList< Types... >, ToAdd >
+		template< typename... Types, typename... ToAdd >
+		struct Prepend< TypeList< Types... >, ToAdd... >
 		{
-			using r = TypeList< ToAdd, Types... >;
+			using r = TypeList< ToAdd..., Types... >;
 		};
 
 		template< typename PrependTo, typename ToPrepend >
@@ -540,14 +540,14 @@ namespace rod
 		template< typename SearchFor >
 		using ContainsAll = typelist::ContainsAll< This, SearchFor >;
 
-		template< typename Type >
-		using Append = typelist::Append< This, Type >;
+		template< typename... Type >
+		using Append = typelist::Append< This, Type... >;
 
 		template< typename ToAppend >
 		using AppendAll = typelist::AppendAll< This, ToAppend >;
 
-		template< typename Type >
-		using Prepend = typelist::Prepend< This, Type >;
+		template< typename... Type >
+		using Prepend = typelist::Prepend< This, Type... >;
 
 		template< typename ToPrepend >
 		using PrependAll = typelist::PrependAll< This, ToPrepend >;

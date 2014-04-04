@@ -36,6 +36,8 @@ namespace rod
 
 			public:
 
+				ROD_Contextual_Constructor( ComponentElement )
+
 				void
 				processSelf( std::string&& id, std::string&& cls )
 				{

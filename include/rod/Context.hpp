@@ -54,6 +54,55 @@ namespace rod
 			{}
 		};
 
+
+		template< typename Ctx, typename... NewType >
+		struct CreateChildContext;
+
+		template< typename... CtxLevel, typename... NewType >
+		struct CreateChildContext< Context< CtxLevel... >, NewType... >
+		{
+			using r = Context< typename CreateContextLevel< NewType... >::r, CtxLevel... >;
+		};
+
+
+		template< typename Ctx >
+		struct GetTypeRegistry;
+
+		template< typename... CtxLevel >
+		struct GetTypeRegistry< Context< CtxLevel... > >
+		{
+		private:
+			template< typename CLevel >
+			struct GetRegistry
+			{
+				using r = typename CLevel::Registry;
+			};
+
+
+			template< typename NextTypeRegistry, typename Result >
+			struct MergeRegistryOp;
+
+			template< typename... Type, typename Result >
+			struct MergeRegistryOp< TypeRegistry< Type... >, Result >
+			{
+				using r = typename Result::template Prepend< Type... >::r;
+			};
+
+
+			using mergedTypes = typename Reduce< MergeRegistryOp, TypeList<>, typename GetRegistry< CtxLevel >::r... >::r;
+
+
+		public:
+			using r = typename mergedTypes::template UnpackTo< TypeRegistry >::r;
+		};
+
+
+		template< typename Context, template< typename > class Selector >
+		struct FindRegisteredType
+		{
+			using r = typename Context::GetTypeRegistry::r::template Find< Selector >::r;
+		};
+
 	}
 
 
@@ -98,6 +147,14 @@ namespace rod
 	public:
 
 		using ParentContext = Context< ParentLevel... >;
+
+		template< typename... NewType >
+		using CreateChildContext = context::CreateChildContext< This, NewType... >;
+
+		using GetTypeRegistry = context::GetTypeRegistry< This >;
+
+		template< template< typename > class Selector >
+		using FindRegisteredType = context::FindRegisteredType< This, Selector >;
 
 
 		Context( ParentContext& parentContext ):

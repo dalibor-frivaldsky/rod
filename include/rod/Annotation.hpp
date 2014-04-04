@@ -14,7 +14,7 @@ struct Has ## a ## Annotation \
 }; \
 \
 template< typename Annotated > \
-struct Has ## a ## Annotation< Annotated, typename common::MakeVoid< typename Annotated::a >::r > \
+struct Has ## a ## Annotation< Annotated, typename ::rod::common::MakeVoid< typename Annotated::a >::r > \
 { \
 	enum { r = true }; \
 }; \

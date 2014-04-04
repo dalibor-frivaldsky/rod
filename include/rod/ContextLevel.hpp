@@ -77,7 +77,7 @@ namespace rod
 	struct ContextLevel:
 		public Container
 	{
-
+		using Registry = TypeRegistry;
 	};
 	
 }
