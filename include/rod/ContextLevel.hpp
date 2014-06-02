@@ -18,6 +18,9 @@ namespace rod
 	template< typename TypeRegistry, typename Container >
 	struct ContextLevel;
 
+	template< typename... Type >
+	struct CreateContextLevel;
+
 
 	namespace contextLevel
 	{
@@ -42,13 +45,13 @@ namespace rod
 		{
 		private:
 			template< typename Type >
-			struct ExtractTypeApplier
+			struct Extract
 			{
 				using r = typename ExtractType< Type >::r;
 			};
 
 		public:
-			using r = typename TypeList< T... >::template Apply< ExtractTypeApplier >::r;
+			using r = typename TypeList< T... >::template Apply< Extract >::r;
 		};
 
 
@@ -56,6 +59,20 @@ namespace rod
 		struct SelectComponents
 		{
 			using r = typename TypeList< Type... >::template Select< annotation::IsComponent >::r;
+		};
+
+
+		template< typename Level, typename... NewType >
+		struct Enrich
+		{
+		private:
+			using newLevel = typename CreateContextLevel< NewType... >::r;
+
+		public:
+			using r = ContextLevel<
+							typename Level::Registry::template Merge< typename newLevel::Registry >::r,
+							typename Level::Container::template Merge< typename newLevel::Container >::r
+					  >;
 		};
 		
 	}
@@ -73,11 +90,31 @@ namespace rod
 	};
 
 
-	template< typename TypeRegistry, typename Container >
-	struct ContextLevel:
-		public Container
+	template< typename TypeRegistry, typename Container_ >
+	struct ContextLevel
 	{
+	private:
+
+		using This = ContextLevel< TypeRegistry, Container_ >;
+
+		Container_	container;
+
+
+	public:
+
 		using Registry = TypeRegistry;
+		using Container = Container_;
+
+
+		template< typename... NewType >
+		using Enrich = contextLevel::Enrich< This, NewType... >;
+
+
+		Container_&
+		getContainer()
+		{
+			return container;
+		}
 	};
 	
 }

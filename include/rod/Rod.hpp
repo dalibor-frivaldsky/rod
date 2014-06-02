@@ -55,7 +55,6 @@ namespace rod
 		enter( const std::string& configurationFilePath )
 		{
 			//enterDomain< Domain >( create< configuration::ConfigurationReader >( this )->read( configurationFilePath ) );
-			//create< Domain >( this ).enter();
 			::rod::create< configuration::ConfigurationReader >( this ).read( configurationFilePath );
 			::rod::create< Domain >( this ).enter();
 		}

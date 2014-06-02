@@ -65,6 +65,18 @@ namespace rod
 		};
 
 
+		template< typename Context, typename... NewType >
+		struct Enrich;
+
+		template< typename CurrentLevel, typename... ParentLevel, typename... NewType >
+		struct Enrich< Context< CurrentLevel, ParentLevel... >, NewType... >
+		{
+			using r = Context<
+						typename CurrentLevel::template Enrich< NewType... >::r,
+						ParentLevel... >;
+		};
+
+
 		template< typename Ctx >
 		struct GetTypeRegistry;
 
@@ -135,13 +147,16 @@ namespace rod
 
 
 	template< typename CurrentLevel, typename... ParentLevel >
-	struct Context< CurrentLevel, ParentLevel... >:
-		private context::ParentContextRef< Context< ParentLevel... > >,
-		public CurrentLevel
+	struct Context< CurrentLevel, ParentLevel... >
 	{
 	private:
 
 		using This = Context< CurrentLevel, ParentLevel... >;
+
+
+		context::ParentContextRef< Context< ParentLevel... > >		parentRef;
+
+		CurrentLevel		currentLevel;
 	
 
 	public:
@@ -151,6 +166,9 @@ namespace rod
 		template< typename... NewType >
 		using CreateChildContext = context::CreateChildContext< This, NewType... >;
 
+		template< typename... NewType >
+		using Enrich = context::Enrich< This, NewType... >;
+
 		using GetTypeRegistry = context::GetTypeRegistry< This >;
 
 		template< template< typename > class Selector >
@@ -158,8 +176,7 @@ namespace rod
 
 
 		Context( ParentContext& parentContext ):
-		  context::ParentContextRef< ParentContext >( parentContext ),
-		  CurrentLevel()
+		  parentRef( parentContext )
 		{}
 
 	};

@@ -15,8 +15,17 @@ namespace rod
 
 	namespace typeRegistry
 	{
+		template< typename TypeReg, typename OtherReg >
+		struct Merge;
 
-		template< typename Reg, template< typename > class Selector >
+		template< typename... Type, typename... OtherType >
+		struct Merge< TypeRegistry< Type... >, TypeRegistry< OtherType... > >
+		{
+			using r = TypeRegistry< Type..., OtherType... >;
+		};
+
+
+		template< typename TypeReg, template< typename > class Selector >
 		struct Find;
 
 		template< typename... Type, template< typename > class Selector >
@@ -44,6 +53,9 @@ namespace rod
 
 
 	public:
+
+		template< typename Other >
+		using Merge = typeRegistry::Merge< This, Other >;
 
 		template< template< typename > class Selector >
 		using Find = typeRegistry::Find< This, Selector >;

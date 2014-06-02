@@ -28,7 +28,7 @@ namespace rod
 		struct BindContextual
 		{
 		private:
-			using interimContext = typename Parent::Context::template CreateChildContext<>::r;
+			using interimContext = typename Parent::Ctx::template CreateChildContext<>::r;
 
 		public:
 			using r = ToCreate< interimContext >;
@@ -38,8 +38,7 @@ namespace rod
 
 
 	template< typename InterimContext, typename... NewType >
-	class Contextual:
-	  public InterimContext
+	class Contextual
 	{
 	private:
 
@@ -49,17 +48,27 @@ namespace rod
 	public:
 
 		using ContextualBase = This;
-		using Context = InterimContext;
+		using Ctx = typename InterimContext::template Enrich< NewType... >::r;
+		using ParentContext = typename Ctx::ParentContext;
+
+
+	private:
+
+		Ctx	context;
+
+
+	public:
 
 
 		template< template< typename > class Selector >
-		using FindRegisteredType = typename Context::template FindRegisteredType< Selector >;
+		using FindRegisteredType = typename Ctx::template FindRegisteredType< Selector >;
 
 
-		Contextual( typename InterimContext::ParentContext& parentContext ):
-		  InterimContext( parentContext )
+		Contextual( typename Ctx::ParentContext& parentContext ):
+		  context( parentContext )
 		{}
 
+		
 
 		template< template< typename > class ToCreate >
 		typename contextual::BindContextual< ToCreate, This >::r
@@ -67,7 +76,7 @@ namespace rod
 		{
 			using toCreate = typename contextual::BindContextual< ToCreate, This >::r;
 
-			return toCreate( *this );
+			return toCreate( this->context );
 		}
 
 		template< template< typename > class ToCreate >
@@ -76,7 +85,7 @@ namespace rod
 		{
 			using toCreate = typename contextual::BindContextual< ToCreate, This >::r;
 
-			return new toCreate( *this );
+			return new toCreate( this->context );
 		}
 	};
 
