@@ -11,6 +11,7 @@
 #include <rod/Context.hpp>
 #include <rod/Generate.hpp>
 #include <rod/ToBeInjected.hpp>
+#include <rod/TypeList.hpp>
 #include <rod/annotation/AutoResolve.hpp>
 #include <rod/annotation/ContextualRecord.hpp>
 #include <rod/common/TypeName.hpp>
@@ -24,14 +25,34 @@ namespace rod
 	namespace contextual
 	{
 
-		template< template< typename > class ToCreate, typename Parent >
-		struct BindContextual
+		template< template< typename > class ToCreate, typename Parent, typename ToAddList >
+		struct BindContextual;
+
+		template< template< typename > class ToCreate, typename Parent, typename... ToAdd >
+		struct BindContextual< ToCreate, Parent, TypeList< ToAdd... > >
 		{
 		private:
-			using interimContext = typename Parent::Ctx::template CreateChildContext<>::r;
+			using interimContext = typename Parent::Ctx::template CreateChildContext< ToAdd... >::r;
 
 		public:
 			using r = ToCreate< interimContext >;
+		};
+
+
+		template< typename... ToInject >
+		struct AsToInjectedComponentList
+		{
+		private:
+
+			template< typename T >
+			struct MakeToBeInjected
+			{
+				using r = ToBeInjected< T >;
+			};
+
+
+		public:
+			using r = typename TypeList< ToInject... >::template Apply< MakeToBeInjected >::r;
 		};
 		
 	}
@@ -70,40 +91,54 @@ namespace rod
 
 		
 
-		template< template< typename > class ToCreate >
-		typename contextual::BindContextual< ToCreate, This >::r
-		create()
+		template< template< typename > class ToCreate, typename ToAddList, typename... ToInject >
+		typename contextual::BindContextual<
+					ToCreate,
+					This,
+					typename ToAddList::template AppendAll<
+								typename contextual::AsToInjectedComponentList< ToInject... >::r >::r >::r
+		create( ToInject&&... toInject )
 		{
-			using toCreate = typename contextual::BindContextual< ToCreate, This >::r;
+			using toInjectComponentList = typename contextual::AsToInjectedComponentList< ToInject... >::r;
+			using toAddAll = typename ToAddList::template AppendAll< toInjectComponentList >::r;
+			using toCreate = typename contextual::BindContextual< ToCreate, This, toAddAll >::r;
 
 			return toCreate( this->context );
 		}
 
-		template< template< typename > class ToCreate >
-		typename contextual::BindContextual< ToCreate, This >::r*
-		createPtr()
+		template< template< typename > class ToCreate, typename ToAddList, typename... ToInject >
+		typename contextual::BindContextual<
+					ToCreate,
+					This,
+					typename ToAddList::template AppendAll<
+								typename contextual::AsToInjectedComponentList< ToInject... >::r >::r >::r*
+		createPtr( ToInject&&... toInject )
 		{
-			using toCreate = typename contextual::BindContextual< ToCreate, This >::r;
+			using toInjectComponentList = typename contextual::AsToInjectedComponentList< ToInject... >::r;
+			using toAddAll = typename ToAddList::template AppendAll< toInjectComponentList >::r;
+			using toCreate = typename contextual::BindContextual< ToCreate, This, toAddAll >::r;
 
 			return new toCreate( this->context );
 		}
 	};
 
 
-	template< template< typename > class ToCreate, typename Parent >
+	// MSVC internal compiler error if ToAdd... passed sa parameter pack go Contextual::create
+	// workaround - wrap the ToAdd inside TypeList to avoid passing parameter pack into Contextual::create
+	template< template< typename > class ToCreate, typename... ToAdd, typename Parent, typename... ToInject >
 	auto
-	create( Parent* parent )
-		-> decltype( parent->template create< ToCreate >() )
+	create( Parent* parent, ToInject&&... toInject )
+		-> decltype( parent->template create< ToCreate, TypeList< ToAdd... > >( toInject... ) )
 	{
-		return parent->template create< ToCreate >();
+		return parent->template create< ToCreate, TypeList< ToAdd... > >( toInject... );
 	}
 
-	template< template< typename > class ToCreate, typename Parent >
+	template< template< typename > class ToCreate, typename... ToAdd, typename Parent, typename... ToInject >
 	auto
-	createPtr( Parent* parent )
-		-> decltype( parent->template createPtr< ToCreate >() )
+	createPtr( Parent* parent, ToInject&&... toInject )
+		-> decltype( parent->template createPtr< ToCreate, TypeList< ToAdd... > >() )
 	{
-		return parent->template createPtr< ToCreate >();
+		return parent->template createPtr< ToCreate, TypeList< ToAdd... > >();
 	}
 
 

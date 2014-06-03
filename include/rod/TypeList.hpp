@@ -114,19 +114,7 @@ namespace rod
 			enum { r = temp == -1 ? -1 : 1 + temp };
 		};
 
-		/*template< typename... TypesBefore, typename... TypesAfter, typename SearchFor >
-		struct IndexOf< TypeList< TypesBefore..., SearchFor, TypesAfter... >, SearchFor >
-		{
-			static constexpr int	r = sizeof...( TypesBefore );
-		};
-
-		template< typename... Types, typename SearchFor >
-		struct IndexOf< TypeList< Types... >, SearchFor >
-		{
-			static constexpr int	r = -1;
-		};*/
-
-
+		
 		template< typename SearchIn, typename SearchFor >
 		struct Contains
 		{

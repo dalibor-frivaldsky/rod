@@ -1,6 +1,7 @@
 #pragma once
 
 
+#include <rod/annotation/Component.hpp>
 #include <rod/holder/ObjectOwner.hpp>
 #include <rod/holder/ObjectReference.hpp>
 
@@ -10,28 +11,34 @@
 namespace rod
 {
 
-	template< typename Component >
+	template< typename Type >
 	struct ToBeInjected;
 
-	template< typename Component >
-	struct ToBeInjected< Component& >
+	template< typename Type_ >
+	struct ToBeInjected< Type_& >
 	{
-		using Type = Component;
-		using Holder = holder::ObjectReference< Component >;
+		using Component = annotation::Component;
+
+		using Type = Type_;
+		using Holder = holder::ObjectReference< Type_ >;
 	};
 
-	template< typename Component >
-	struct ToBeInjected< Component&& >
+	template< typename Type_ >
+	struct ToBeInjected< Type_&& >
 	{
-		using Type = Component;
-		using Holder = holder::ObjectOwner< Component >;
+		using Component = annotation::Component;
+
+		using Type = Type_;
+		using Holder = holder::ObjectOwner< Type_ >;
 	};
 
-	template< typename Component >
+	template< typename Type_ >
 	struct ToBeInjected
 	{
-		using Type = Component;
-		using Holder = holder::ObjectOwner< Component >;
+		using Component = annotation::Component;
+
+		using Type = Type_;
+		using Holder = holder::ObjectOwner< Type_ >;
 	};
 	
 }
