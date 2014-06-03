@@ -12,23 +12,12 @@ namespace rod
 		template< typename Type >
 		struct SingletonOwner
 		{
-			Type*	object = nullptr;
+			Type	object;
 
-			~SingletonOwner()
-			{
-				delete object;
-			}
-
-			Type*
-			get() const
+			Type&
+			get()
 			{
 				return object;
-			}
-
-			void
-			setupFrom( Type* object )
-			{
-				this->object = object;
 			}
 		};
 

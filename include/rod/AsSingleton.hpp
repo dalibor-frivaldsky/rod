@@ -2,7 +2,7 @@
 
 
 #include <rod/annotation/Component.hpp>
-#include <rod/holder/SingletonHolder.hpp>
+#include <rod/holder/SingletonOwner.hpp>
 
 
 
