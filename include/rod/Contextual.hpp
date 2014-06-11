@@ -120,6 +120,13 @@ namespace rod
 
 			return new toCreate( this->context );
 		}
+
+		template< typename ToResolve >
+		ToResolve&
+		resolve()
+		{
+			return context.template resolve< ToResolve >();
+		}
 	};
 
 
@@ -139,6 +146,13 @@ namespace rod
 		-> decltype( parent->template createPtr< ToCreate, TypeList< ToAdd... > >() )
 	{
 		return parent->template createPtr< ToCreate, TypeList< ToAdd... > >();
+	}
+
+	template< typename ToResolve, typename BindingContextual >
+	ToResolve&
+	resolve( BindingContextual* bindingContextual )
+	{
+		return bindingContextual->template resolve< ToResolve >();
 	}
 
 

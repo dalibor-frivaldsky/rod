@@ -29,6 +29,8 @@
 #include <rod/holder/SingletonHolder.hpp>*/
 
 
+#include <type_traits>
+
 #include <rod/ContextLevel.hpp>
 
 
@@ -115,6 +117,35 @@ namespace rod
 			using r = typename Context::GetTypeRegistry::r::template Find< Selector >::r;
 		};
 
+
+
+		template< typename Context, typename Component, typename CurrentContains = void >
+		struct FindOwningContext;
+
+		template< typename CurrentLevel, typename Component, typename... OtherLevel >
+		struct FindOwningContext< Context< CurrentLevel, OtherLevel... >,
+								  Component,
+								  typename std::enable_if< CurrentLevel::Container::template Contains< Component >::r >::type >
+		{
+			using r = Context< CurrentLevel, OtherLevel... >;
+		};
+
+		template< typename Component, typename DoesNotMatter >
+		struct FindOwningContext< Context<>, Component, DoesNotMatter >
+		{
+			using r = void;
+		};
+
+		template< typename CurrentLevel, typename Component, typename... OtherLevel, typename DoesNotContain >
+		struct FindOwningContext< Context< CurrentLevel, OtherLevel... >,
+								  Component,
+								  DoesNotContain >
+		{
+			static_assert( sizeof...( OtherLevel ), "Owning context of component not found" );
+
+			using r = typename FindOwningContext< Context< OtherLevel... >, Component >::r;
+		};
+
 	}
 
 
@@ -149,6 +180,10 @@ namespace rod
 	template< typename CurrentLevel, typename... ParentLevel >
 	struct Context< CurrentLevel, ParentLevel... >
 	{
+
+		template< typename... Level >
+		friend class Context;
+
 	private:
 
 		using This = Context< CurrentLevel, ParentLevel... >;
@@ -174,10 +209,87 @@ namespace rod
 		template< template< typename > class Selector >
 		using FindRegisteredType = context::FindRegisteredType< This, Selector >;
 
+		template< typename Component >
+		using FindOwningContext = context::FindOwningContext< This, Component >;
+
 
 		Context( ParentContext& parentContext ):
 		  parentRef( parentContext )
 		{}
+
+
+		CurrentLevel&
+		getCurrentLevel()
+		{
+			return currentLevel;
+		}
+
+		template< typename ToResolve >
+		ToResolve&
+		resolve()
+		{
+			return retrieve< ToResolve >();
+
+			/*std::string					toResolveName = common::typeName< ToResolve >();
+			configuration::Interfaces&	interfacesConfig = this->template retrieve< configuration::Interfaces >();
+
+			if( interfacesConfig.isConfigured( toResolveName ) )
+			{
+				auto	configuredImplementors = context::FindConfiguredImplementors< ToResolve >::find( *this );
+				auto	implementorIt = configuredImplementors.find(
+											interfacesConfig.getConfiguration( toResolveName ).providedById );
+
+				if( implementorIt == configuredImplementors.end() )
+				{
+					// TODO
+					std::cout << "Implementor not found" << std::endl;
+					throw std::runtime_error( "Implementor not found" );
+				}
+				else
+				{
+					return implementorIt->second;
+				}
+			}
+			else
+			{
+				using implementors = typename This::template FindImplementors< ToResolve >::r;
+				using implementor = typename implementors::Head::r;
+				
+				return this->template retrieve< implementor >();
+			}*/
+		}
+
+
+	private:
+
+		template< typename ToRetrieve >
+		ToRetrieve&
+		retrieve()
+		{
+			using owningContext = typename This::template FindOwningContext< ToRetrieve >::r;
+				
+			owningContext&	componentContext = this->template accessContext< owningContext >();
+			return componentContext.getCurrentLevel().getContainer().template access< ToRetrieve >().get();
+		}
+		
+
+		template< typename ToAccessContext >
+		typename std::enable_if<
+						std::is_same< This, ToAccessContext >::value,
+						ToAccessContext >::type&
+		accessContext()
+		{
+			return *this;
+		}
+
+		template< typename ToAccessContext >
+		typename std::enable_if<
+						std::is_same< This, ToAccessContext >::value == false,
+						ToAccessContext >::type&
+		accessContext()
+		{
+			return parentRef.parentContext.template accessContext< ToAccessContext >();
+		}
 
 	};
 
