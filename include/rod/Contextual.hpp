@@ -130,7 +130,7 @@ namespace rod
 	};
 
 
-	// MSVC internal compiler error if ToAdd... passed sa parameter pack go Contextual::create
+	// MSVC2013 internal compiler error if ToAdd... passed sa parameter pack to Contextual::create
 	// workaround - wrap the ToAdd inside TypeList to avoid passing parameter pack into Contextual::create
 	template< template< typename > class ToCreate, typename... ToAdd, typename Parent, typename... ToInject >
 	auto
@@ -171,6 +171,19 @@ namespace rod
 	#endif
 #elif defined( _MSC_VER )
 	#define ROD_Contextual_Constructor( cls )	ROD_Contextual_Constructor_Define( cls )
+#else
+	#define ROD_Contextual_Constructor( cls )	ROD_Contextual_Constructor_Inherit( cls )
+#endif
+
+
+// MSVC2013 does not accept "template" there, nor does it accept rod::resolve< cls >( this )
+// when initializing members outside of the constructor initialization list
+#if defined( __GNUC__ )
+	#define ROD_Resolve( cls )	this->template resolve< cls >()
+#elif defined( _MSC_VER )
+	#define ROD_Resolve( cls )	this->resolve< cls >()
+#else
+	#define ROD_Resolve( cls )	rod::resolve< cls >( this )
 #endif
 
 

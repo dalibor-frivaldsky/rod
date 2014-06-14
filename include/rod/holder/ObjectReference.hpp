@@ -1,6 +1,9 @@
 #pragma once
 
 
+#include <rod/TypeList.hpp>
+
+
 
 
 namespace rod
@@ -16,6 +19,8 @@ namespace rod
 			Type*	object = nullptr;
 
 		public:
+
+			using Dependencies = TypeList<>;
 
 			void
 			setupFrom( Type& object )

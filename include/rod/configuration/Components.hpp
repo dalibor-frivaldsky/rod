@@ -31,7 +31,7 @@ namespace rod
 			void
 			configure( ComponentType&& component )
 			{
-				componentMap.emplace( component.cls, std::forward< ComponentType >( component ) );
+				componentMap.insert( component.cls, std::forward< ComponentType >( component ) );
 			}
 
 			inline

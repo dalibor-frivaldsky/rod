@@ -31,7 +31,7 @@ namespace rod
 			Interface&
 			configure( InterfaceType&& interface )
 			{
-				return interfaceMap.emplace( interface.cls, std::move( interface ) ).first->second;
+				return interfaceMap.insert( interface.cls, std::move( interface ) ).first->second;
 			}
 
 			inline

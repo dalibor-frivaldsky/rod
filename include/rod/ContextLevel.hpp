@@ -2,6 +2,7 @@
 
 
 #include <type_traits>
+#include <utility>
 
 #include <rod/Container.hpp>
 #include <rod/Reduce.hpp>
@@ -106,9 +107,16 @@ namespace rod
 		using Container = Container_;
 
 
+		template< typename ArgTuple >
+		ContextLevel( ArgTuple&& argTuple ):
+		  container( std::forward< ArgTuple >( argTuple ) )
+		{}
+
+
 		template< typename... NewType >
 		using Enrich = contextLevel::Enrich< This, NewType... >;
 
+		using GetDependencies = typename Container::GetDependencies;
 
 		Container_&
 		getContainer()

@@ -1,6 +1,9 @@
 #pragma once
 
 
+#include <rod/annotation/ConstructWith.hpp>
+
+
 
 
 namespace rod
@@ -12,29 +15,22 @@ namespace rod
 		template< typename Type >
 		struct SingletonOwner
 		{
+
+			using Dependencies = typename annotation::GetConstructionArguments< Type >::r;
+
+
 			Type	object;
+
+			template< typename... Arg >
+			SingletonOwner( Arg&... arg ):
+			  object( arg()... )
+			{}
 
 			Type&
 			get()
 			{
 				return object;
 			}
-		};
-
-
-		template< typename Holder >
-		struct SingletonSelector;
-
-		template< typename Type >
-		struct SingletonSelector< SingletonOwner< Type > >
-		{
-			enum { r = true };
-		};
-
-		template< typename Holder >
-		struct SingletonSelector
-		{
-			enum { r = false };
 		};
 		
 	}

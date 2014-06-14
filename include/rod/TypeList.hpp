@@ -2,6 +2,7 @@
 
 
 #include <iostream>
+#include <tuple>
 #include <typeinfo>
 
 #include <rod/Reduce.hpp>
@@ -443,6 +444,16 @@ namespace rod
 			using r = typename Prepend< partialSort, currentDerived >::r;
 		};
 
+
+		template< typename TypeList >
+		struct AsTuple;
+
+		template< typename... Type >
+		struct AsTuple< TypeList< Type... > >
+		{
+			using r = std::tuple< Type... >;
+		};
+
 	}
 
 
@@ -571,6 +582,8 @@ namespace rod
 		using MostDerived = typelist::MostDerived< This, typename Head::r >;
 
 		using DerivedToFront = typelist::DerivedToFront< This >;
+
+		using AsTuple = typelist::AsTuple< This >;
 	};
 
 }

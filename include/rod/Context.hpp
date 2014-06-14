@@ -28,10 +28,11 @@
 #include <rod/holder/ObjectReference.hpp>
 #include <rod/holder/SingletonHolder.hpp>*/
 
-
+#include <functional>
 #include <type_traits>
 
 #include <rod/ContextLevel.hpp>
+#include <rod/TypeList.hpp>
 
 
 
@@ -146,6 +147,37 @@ namespace rod
 			using r = typename FindOwningContext< Context< OtherLevel... >, Component >::r;
 		};
 
+
+		template< typename Deps >
+		struct GatherDeps;
+
+		template< typename... Dep >
+		struct GatherDeps< TypeList< Dep... > >
+		{
+		private:
+			template< typename D >
+			struct CreateLambda
+			{
+				template< typename Ctx >
+				static
+				std::function< D&() >
+				create( Ctx* ctx )
+				{
+					return [ctx] () -> D& { return ctx->template resolve< D >(); };
+				}
+			};
+
+		public:
+			template< typename Ctx >
+			static
+			auto
+			gather( Ctx* ctx )
+				-> decltype( std::make_tuple( CreateLambda< Dep >::create( ctx )... ) )
+			{
+				return std::make_tuple( CreateLambda< Dep >::create( ctx )... );
+			}
+		};
+
 	}
 
 
@@ -214,7 +246,9 @@ namespace rod
 
 
 		Context( ParentContext& parentContext ):
-		  parentRef( parentContext )
+		  parentRef( parentContext ),
+		  currentLevel( context::GatherDeps<
+		  					typename CurrentLevel::GetDependencies::r >::gather( this ) )
 		{}
 
 

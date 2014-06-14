@@ -3,6 +3,8 @@
 
 #include <utility>
 
+#include <rod/TypeList.hpp>
+
 
 
 
@@ -30,6 +32,8 @@ namespace rod
 			Container*	container = nullptr;
 
 		public:
+
+			using Dependencies = TypeList<>;
 
 			~ObjectOwner()
 			{
