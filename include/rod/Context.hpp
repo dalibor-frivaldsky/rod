@@ -33,6 +33,7 @@
 
 #include <rod/ContextLevel.hpp>
 #include <rod/TypeList.hpp>
+#include <rod/annotation/Component.hpp>
 
 
 
@@ -58,13 +59,110 @@ namespace rod
 		};
 
 
+		template< typename Component, typename ExistingComponents >
+		struct DependenciesSatisfied
+		{
+		private:
+			using dependencies = typename Component::Holder::Dependencies;
+
+		public:
+			enum { r = ExistingComponents::template ContainsAll< dependencies >::r };
+		};
+
+
+		template< typename NewComponents, typename ExistingComponents >
+		struct SelectCreatable;
+
+		template< typename... NewComponent, typename ExistingComponents >
+		struct SelectCreatable< TypeList< NewComponent... >, ExistingComponents >
+		{
+		private:
+			template< typename NewComp, typename Satisfied >
+			struct AppendIfStatisfied
+			{
+				using r = typename common::Select<
+											DependenciesSatisfied< NewComp, ExistingComponents >::r,
+											typename Satisfied::template Append< NewComp >::r,
+											Satisfied >::r;
+			};
+		
+		public:
+			using r = typename Reduce< AppendIfStatisfied, TypeList<>, NewComponent... >::r;
+		};
+
+
+		template< typename NewComponents, typename ExistingComponents >
+		struct SortComponentsByDependency;
+
+		template< typename ExistingComponents >
+		struct SortComponentsByDependency< TypeList<>, ExistingComponents >
+		{
+			using r = TypeList<>;
+		};
+
+		template< typename NewComponents, typename ExistingComponents >
+		struct SortComponentsByDependency
+		{
+		private:
+			template< typename Comp >
+			struct ExtractType
+			{
+				using r = typename Comp::Type;
+			};
+
+			using creatable = typename SelectCreatable< NewComponents, ExistingComponents >::r;
+			static_assert( creatable::Length::r > 0, "Unable to create all components - dependencies not met" );
+
+			using mergedComponentSet = typename ExistingComponents::template AppendAll< typename creatable::template Apply< ExtractType >::r >::r;
+			using remainingNewComponents = typename NewComponents::template RemoveList< creatable >::r;
+			using nextCreatable = typename SortComponentsByDependency< remainingNewComponents, mergedComponentSet >::r;
+
+		public:
+			using r = typename creatable::template AppendAll< nextCreatable >::r;
+		};
+
+		
+		template< typename... NewType >
+		struct FilterComponents
+		{
+		private:
+			template< typename T >
+			struct IsNotComponent
+			{
+				enum { r = annotation::IsComponent< T >::r == false };
+			};
+
+		public:
+			using Components = typename TypeList< NewType... >::template Select< annotation::IsComponent >::r;
+			using NotComponents = typename TypeList< NewType... >::template Select< IsNotComponent >::r;
+		};
+
+
+		template< typename Ctx, typename... NewType >
+		struct OrderByDependencies
+		{
+		private:
+			using filter = FilterComponents< NewType... >;
+			using sortedComponents = typename SortComponentsByDependency<
+												typename filter::Components,
+												typename Ctx::GetComponents::r >::r;
+
+		public:
+			using r = typename filter::NotComponents::template AppendAll< sortedComponents >::r;
+		};
+
+
 		template< typename Ctx, typename... NewType >
 		struct CreateChildContext;
 
 		template< typename... CtxLevel, typename... NewType >
 		struct CreateChildContext< Context< CtxLevel... >, NewType... >
 		{
-			using r = Context< typename CreateContextLevel< NewType... >::r, CtxLevel... >;
+			using r = Context<
+						typename OrderByDependencies<
+									Context< CtxLevel... >,
+									NewType... >::r::template UnpackTo< CreateContextLevel >::r::r,
+						CtxLevel... >;
 		};
 
 
@@ -75,7 +173,9 @@ namespace rod
 		struct Enrich< Context< CurrentLevel, ParentLevel... >, NewType... >
 		{
 			using r = Context<
-						typename CurrentLevel::template Enrich< NewType... >::r,
+						typename OrderByDependencies<
+									Context< CurrentLevel, ParentLevel... >,
+									NewType... >::r::template UnpackTo< CurrentLevel::template Enrich >::r::r,
 						ParentLevel... >;
 		};
 
@@ -118,6 +218,31 @@ namespace rod
 			using r = typename Context::GetTypeRegistry::r::template Find< Selector >::r;
 		};
 
+
+		template< typename Ctx >
+		struct GetComponents;
+
+		template< typename... CtxLevel >
+		struct GetComponents< Context< CtxLevel... > >
+		{
+		private:
+			template< typename CLevel >
+			struct GetContainedTypes
+			{
+				using r = typename CLevel::Container::ContainedTypes::r;
+			};
+
+
+			template< typename Next, typename Result >
+			struct MergeContainedTypes
+			{
+				using r = typename Result::template PrependAll< Next >::r;
+			};
+
+
+		public:
+			using r = typename Reduce< MergeContainedTypes, TypeList<>, typename GetContainedTypes< CtxLevel >::r... >::r;
+		};
 
 
 		template< typename Context, typename Component, typename CurrentContains = void >
@@ -221,6 +346,7 @@ namespace rod
 		using This = Context< CurrentLevel, ParentLevel... >;
 
 
+		// TODO is the ParentContextRef still necessary?
 		context::ParentContextRef< Context< ParentLevel... > >		parentRef;
 
 		CurrentLevel		currentLevel;
@@ -240,6 +366,8 @@ namespace rod
 
 		template< template< typename > class Selector >
 		using FindRegisteredType = context::FindRegisteredType< This, Selector >;
+
+		using GetComponents = context::GetComponents< This >;
 
 		template< typename Component >
 		using FindOwningContext = context::FindOwningContext< This, Component >;
