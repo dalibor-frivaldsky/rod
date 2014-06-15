@@ -4,6 +4,7 @@
 #include <utility>
 
 #include <rod/TypeList.hpp>
+#include <rod/holder/InjectedValue.hpp>
 
 
 
@@ -19,40 +20,22 @@ namespace rod
 		{
 
 		private:
+			Type	object;
 
-			struct Container
-			{
-				Type	object;
-
-				Container( Type&& object ):
-				  object( std::forward< Type >( object ) )
-				{}
-			};
-
-			Container*	container = nullptr;
 
 		public:
 
-			using Dependencies = TypeList<>;
+			using Dependencies = TypeList< InjectedValue< Type > >;
 
-			~ObjectOwner()
-			{
-				if( container )
-				{
-					delete container;
-				}
-			}
+			
+			ObjectOwner( std::function< InjectedValue< Type >() >& ref ):
+			  object( std::move( ref().object ) )
+			{}
 
-			void
-			setupFrom( Type&& object )
-			{
-				container = new Container( std::forward< Type >( object ) );
-			}
-
-			Type*
+			Type&
 			get()
 			{
-				return &container->object;
+				return object;
 			}
 
 		};

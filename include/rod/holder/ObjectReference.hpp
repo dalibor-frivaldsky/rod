@@ -1,7 +1,10 @@
 #pragma once
 
 
+#include <functional>
+
 #include <rod/TypeList.hpp>
+#include <rod/holder/InjectedReference.hpp>
 
 
 
@@ -13,22 +16,23 @@ namespace rod
 	{
 
 		template< typename Type >
-		struct ObjectReference
+		class ObjectReference
 		{
 
-			Type*	object = nullptr;
+		private:
+			Type&	object;
+
 
 		public:
 
-			using Dependencies = TypeList<>;
+			using Dependencies = TypeList< InjectedReference< Type > >;
 
-			void
-			setupFrom( Type& object )
-			{
-				this->object = &object;
-			}
+			
+			ObjectReference( std::function< InjectedReference< Type >() >& ref ):
+			  object( ref().object )
+			{}
 
-			Type*
+			Type&
 			get()
 			{
 				return object;

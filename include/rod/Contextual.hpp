@@ -25,14 +25,15 @@ namespace rod
 	namespace contextual
 	{
 
-		template< template< typename > class ToCreate, typename Parent, typename ToAddList >
+		template< template< typename > class ToCreate, typename Parent, typename ToInject, typename ToAddList >
 		struct BindContextual;
 
-		template< template< typename > class ToCreate, typename Parent, typename... ToAdd >
-		struct BindContextual< ToCreate, Parent, TypeList< ToAdd... > >
+		template< template< typename > class ToCreate, typename Parent, typename... ToInject, typename... ToAdd >
+		struct BindContextual< ToCreate, Parent, TypeList< ToInject... >, TypeList< ToAdd... > >
 		{
 		private:
-			using interimContext = typename Parent::Ctx::template CreateChildContext< ToAdd... >::r;
+			using injectContext = typename Parent::Ctx::template CreateChildContext< ToInject... >::r;
+			using interimContext = typename injectContext::template Enrich< ToAdd... >::r;
 
 		public:
 			using r = ToCreate< interimContext >;
@@ -85,8 +86,9 @@ namespace rod
 		using FindRegisteredType = typename Ctx::template FindRegisteredType< Selector >;
 
 
-		Contextual( typename Ctx::ParentContext& parentContext ):
-		  context( parentContext )
+		template< typename... ToInject >
+		Contextual( typename Ctx::ParentContext& parentContext, ToInject&&... toInject ):
+		  context( parentContext, std::forward< ToInject >( toInject )... )
 		{}
 
 		
@@ -95,30 +97,28 @@ namespace rod
 		typename contextual::BindContextual<
 					ToCreate,
 					This,
-					typename ToAddList::template AppendAll<
-								typename contextual::AsToInjectedComponentList< ToInject... >::r >::r >::r
+					typename contextual::AsToInjectedComponentList< ToInject... >::r,
+					ToAddList >::r
 		create( ToInject&&... toInject )
 		{
-			using toInjectComponentList = typename contextual::AsToInjectedComponentList< ToInject... >::r;
-			using toAddAll = typename ToAddList::template AppendAll< toInjectComponentList >::r;
-			using toCreate = typename contextual::BindContextual< ToCreate, This, toAddAll >::r;
+			using toInjectList = typename contextual::AsToInjectedComponentList< ToInject... >::r;
+			using toCreate = typename contextual::BindContextual< ToCreate, This, toInjectList, ToAddList >::r;
 
-			return toCreate( this->context );
+			return toCreate( this->context, std::forward< ToInject >( toInject )... );
 		}
 
 		template< template< typename > class ToCreate, typename ToAddList, typename... ToInject >
 		typename contextual::BindContextual<
 					ToCreate,
 					This,
-					typename ToAddList::template AppendAll<
-								typename contextual::AsToInjectedComponentList< ToInject... >::r >::r >::r*
+					typename contextual::AsToInjectedComponentList< ToInject... >::r,
+					ToAddList >::r*
 		createPtr( ToInject&&... toInject )
 		{
-			using toInjectComponentList = typename contextual::AsToInjectedComponentList< ToInject... >::r;
-			using toAddAll = typename ToAddList::template AppendAll< toInjectComponentList >::r;
-			using toCreate = typename contextual::BindContextual< ToCreate, This, toAddAll >::r;
+			using toInjectList = typename contextual::AsToInjectedComponentList< ToInject... >::r;
+			using toCreate = typename contextual::BindContextual< ToCreate, This, toInjectList, ToAddList >::r;
 
-			return new toCreate( this->context );
+			return new toCreate( this->context, std::forward< ToInject >( toInject )... );
 		}
 
 		template< typename ToResolve >
@@ -135,9 +135,9 @@ namespace rod
 	template< template< typename > class ToCreate, typename... ToAdd, typename Parent, typename... ToInject >
 	auto
 	create( Parent* parent, ToInject&&... toInject )
-		-> decltype( parent->template create< ToCreate, TypeList< ToAdd... > >( toInject... ) )
+		-> decltype( parent->template create< ToCreate, TypeList< ToAdd... > >( std::forward< ToInject >( toInject )... ) )
 	{
-		return parent->template create< ToCreate, TypeList< ToAdd... > >( toInject... );
+		return parent->template create< ToCreate, TypeList< ToAdd... > >( std::forward< ToInject >( toInject )... );
 	}
 
 	template< template< typename > class ToCreate, typename... ToAdd, typename Parent, typename... ToInject >
@@ -159,8 +159,9 @@ namespace rod
 #define ROD_Contextual_Constructor_Inherit( cls )	using cls< Context >::ContextualBase::Contextual;
 
 #define ROD_Contextual_Constructor_Define( cls )	\
-	cls( typename cls< Context >::ParentContext& parentContext ): \
-	  cls< Context >::ContextualBase( parentContext ) \
+	template< typename... ToInject > \
+	cls( typename cls< Context >::ParentContext& parentContext, ToInject&&... toInject ): \
+	  cls< Context >::ContextualBase( parentContext, std::forward< ToInject >( toInject )... ) \
 	{}
 
 #if defined( __GNUC__ )

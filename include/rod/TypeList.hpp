@@ -4,6 +4,7 @@
 #include <iostream>
 #include <tuple>
 #include <typeinfo>
+#include <type_traits>
 
 #include <rod/Reduce.hpp>
 #include <rod/common/NullType.hpp>
@@ -291,6 +292,27 @@ namespace rod
 		};
 
 
+		template< typename TypeList, template< typename > class Selector >
+		struct RemoveBy;
+
+		template< template< typename > class Selector, typename... Type >
+		struct RemoveBy< TypeList< Type... >, Selector >
+		{
+		private:
+			template< typename Next, typename Result >
+			struct RemoveMatch
+			{
+				using r = typename std::conditional<
+								Selector< Next >::r,
+								Result,
+								typename Result::template Append< Next >::r >::type;
+			};
+
+		public:
+			using r = typename Reduce< RemoveMatch, TypeList<>, Type... >::r;
+		};
+
+
 		template< typename TypeList, typename ReplaceWhat, typename ReplaceWith >
 		struct Replace;
 
@@ -564,6 +586,9 @@ namespace rod
 		using RemoveAll = typelist::RemoveAll< This, Type >;
 
 		using RemoveDuplicates = typelist::RemoveDuplicates< This >;
+
+		template< template< typename > class Selector >
+		using RemoveBy = typelist::RemoveBy< This, Selector >;
 
 		template< typename What, typename With >
 		using Replace = typelist::Replace< This, What, With >;

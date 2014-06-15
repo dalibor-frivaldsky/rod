@@ -296,7 +296,8 @@ namespace rod
 								argTuple,
 								typename GetSequence<
 											deps,
-											typename TypeList< decltype( std::get< Seq >( argTuple )() )... >::template Apply< Decay >::r >::r() ) )
+											typename TypeList< decltype( std::get< Seq >( argTuple )() )... >
+												::template Apply< Decay >::r >::r() ) )
 			{
 				using argTypesUndecayed = TypeList< decltype( std::get< Seq >( argTuple )() )... >;
 				using argTypes = typename argTypesUndecayed::template Apply< Decay >::r;

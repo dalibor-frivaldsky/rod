@@ -30,10 +30,13 @@
 
 #include <functional>
 #include <type_traits>
+#include <utility>
 
 #include <rod/ContextLevel.hpp>
 #include <rod/TypeList.hpp>
 #include <rod/annotation/Component.hpp>
+#include <rod/holder/InjectedReference.hpp>
+#include <rod/holder/InjectedValue.hpp>
 
 
 
@@ -159,9 +162,7 @@ namespace rod
 		struct CreateChildContext< Context< CtxLevel... >, NewType... >
 		{
 			using r = Context<
-						typename OrderByDependencies<
-									Context< CtxLevel... >,
-									NewType... >::r::template UnpackTo< CreateContextLevel >::r::r,
+						typename CreateContextLevel< NewType... >::r,
 						CtxLevel... >;
 		};
 
@@ -292,15 +293,72 @@ namespace rod
 				}
 			};
 
+
+			template< typename ToInject >
+			struct CreateInjectLambda;
+			
+			template< typename ToInject >
+			struct CreateInjectLambda< ToInject& >
+			{
+				using injectedType = InjectedReference< typename std::decay< ToInject >::type >;
+				
+				static
+				std::function< injectedType() >
+				create( ToInject& toInject )
+				{
+					return [&toInject] () -> injectedType { return injectedType( toInject ); };
+				}
+			};
+
+			template< typename ToInject >
+			struct CreateInjectLambda< ToInject&& >
+			{
+				using injectedType = InjectedValue< typename std::decay< ToInject >::type >;
+				
+				static
+				std::function< injectedType() >
+				create( ToInject&& toInject )
+				{
+					return [&toInject] () -> injectedType { return injectedType( std::move( toInject ) ); };
+				}
+			};
+
+
 		public:
-			template< typename Ctx >
+			template< typename Ctx, typename... ToInject >
 			static
 			auto
-			gather( Ctx* ctx )
-				-> decltype( std::make_tuple( CreateLambda< Dep >::create( ctx )... ) )
+			gather( Ctx* ctx, ToInject&&... toInject )
+				-> decltype( std::make_tuple(
+									CreateLambda< Dep >::create( ctx )...,
+									CreateInjectLambda< ToInject&& >::create( std::forward< ToInject >( toInject ) )... ) )
 			{
-				return std::make_tuple( CreateLambda< Dep >::create( ctx )... );
+				return std::make_tuple(
+							CreateLambda< Dep >::create( ctx )...,
+							CreateInjectLambda< ToInject&& >::create( std::forward< ToInject >( toInject ) )... );
 			}
+		};
+
+
+		template< typename Dep >
+		struct IsInjected;
+
+		template< typename Type >
+		struct IsInjected< InjectedReference< Type > >
+		{
+			enum { r = true };
+		};
+
+		template< typename Type >
+		struct IsInjected< InjectedValue< Type > >
+		{
+			enum { r = true };
+		};
+
+		template< typename Dep >
+		struct IsInjected
+		{
+			enum { r = false };
 		};
 
 	}
@@ -373,10 +431,13 @@ namespace rod
 		using FindOwningContext = context::FindOwningContext< This, Component >;
 
 
-		Context( ParentContext& parentContext ):
+		template< typename... ToInject >
+		Context( ParentContext& parentContext, ToInject&&... toInject ):
 		  parentRef( parentContext ),
 		  currentLevel( context::GatherDeps<
-		  					typename CurrentLevel::GetDependencies::r >::gather( this ) )
+		  					typename CurrentLevel::GetDependencies::r
+		  						::template RemoveBy< context::IsInjected >::r >
+		  							::gather( this, std::forward< ToInject >( toInject )... ) )
 		{}
 
 
