@@ -397,6 +397,16 @@ namespace rod
 		};
 
 
+		template< typename TypeList, template< typename, typename... > class Destination, typename Fixed >
+		struct UnpackTo1;
+
+		template< typename... Type, template< typename, typename... > class Destination, typename Fixed >
+		struct UnpackTo1< TypeList< Type... >, Destination, Fixed >
+		{
+			using r = Destination< Fixed, Type... >;
+		};
+
+
 		template< typename TypeList, typename Super >
 		struct MostSuper;
 
@@ -601,6 +611,9 @@ namespace rod
 
 		template< template< typename... > class Destination >
 		using UnpackTo = typelist::UnpackTo< This, Destination >;
+
+		template< template< typename, typename... > class Destination, typename Fixed >
+		using UnpackTo1 = typelist::UnpackTo1< This, Destination, Fixed >;
 
 		using MostSuper = typelist::MostSuper< This, typename Head::r >;
 

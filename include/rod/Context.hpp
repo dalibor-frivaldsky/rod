@@ -62,69 +62,94 @@ namespace rod
 		};
 
 
-		template< typename Component, typename ExistingComponents >
-		struct DependenciesSatisfied
-		{
-		private:
-			using dependencies = typename Component::Holder::Dependencies;
+		template< typename Ctx, typename... NewType >
+		struct CreateChildContext;
 
-		public:
-			enum { r = ExistingComponents::template ContainsAll< dependencies >::r };
+		template< typename... CtxLevel, typename... NewType >
+		struct CreateChildContext< Context< CtxLevel... >, NewType... >
+		{
+			using r = Context<
+						typename CreateContextLevel< NewType... >::r,
+						CtxLevel... >;
 		};
 
 
-		template< typename NewComponents, typename ExistingComponents >
-		struct SelectCreatable;
+		template< typename Context, typename Deps >
+		struct CanResolveDeps;
 
-		template< typename... NewComponent, typename ExistingComponents >
-		struct SelectCreatable< TypeList< NewComponent... >, ExistingComponents >
+		template< typename Ctx, typename... Dep >
+		struct CanResolveDeps< Ctx, TypeList< Dep... > >
 		{
 		private:
-			template< typename NewComp, typename Satisfied >
-			struct AppendIfStatisfied
+			template< typename Next, typename Result >
+			struct AppendIfCannotResolve
 			{
-				using r = typename common::Select<
-											DependenciesSatisfied< NewComp, ExistingComponents >::r,
-											typename Satisfied::template Append< NewComp >::r,
-											Satisfied >::r;
-			};
-		
-		public:
-			using r = typename Reduce< AppendIfStatisfied, TypeList<>, NewComponent... >::r;
-		};
-
-
-		template< typename NewComponents, typename ExistingComponents >
-		struct SortComponentsByDependency;
-
-		template< typename ExistingComponents >
-		struct SortComponentsByDependency< TypeList<>, ExistingComponents >
-		{
-			using r = TypeList<>;
-		};
-
-		template< typename NewComponents, typename ExistingComponents >
-		struct SortComponentsByDependency
-		{
-		private:
-			template< typename Comp >
-			struct ExtractType
-			{
-				using r = typename Comp::Type;
+				using r = typename std::conditional<
+							Ctx::template CanResolve< Next >::r,
+							Result,
+							typename Result::template Append< Next >::r >::type;
 			};
 
-			using creatable = typename SelectCreatable< NewComponents, ExistingComponents >::r;
-			static_assert( creatable::Length::r > 0, "Unable to create all components - dependencies not met" );
-
-			using mergedComponentSet = typename ExistingComponents::template AppendAll< typename creatable::template Apply< ExtractType >::r >::r;
-			using remainingNewComponents = typename NewComponents::template RemoveList< creatable >::r;
-			using nextCreatable = typename SortComponentsByDependency< remainingNewComponents, mergedComponentSet >::r;
-
 		public:
-			using r = typename creatable::template AppendAll< nextCreatable >::r;
+			enum { r = Reduce<
+							AppendIfCannotResolve,
+							TypeList<>,
+							Dep... >::r::Length::r == 0 };
 		};
 
-		
+
+		template< typename Context, typename... Component >
+		struct OrderedLevelEnrich;
+
+		template< typename CurrentLevel, typename... ParentLevel >
+		struct OrderedLevelEnrich< Context< CurrentLevel, ParentLevel... > >
+		{
+			using r = CurrentLevel;
+		};
+
+		template< typename CurrentLevel, typename... ParentLevel, typename... Component >
+		struct OrderedLevelEnrich< Context< CurrentLevel, ParentLevel... >, Component... >
+		{
+		private:
+			using ctx = Context< CurrentLevel, ParentLevel... >;
+
+			template< typename Next, typename Result >
+			struct DepsSatisfier
+			{
+				using r = typename std::conditional<
+							CanResolveDeps< ctx, typename Next::Holder::Dependencies >::r,
+							typename Result::template Append< Next >::r,
+							Result >::type;
+			};
+
+			using satisfiedComponents = typename Reduce<
+													DepsSatisfier,
+													TypeList<>,
+													Component... >::r;
+
+			using unsatisfiedComponents = typename TypeList< Component... >
+											::template RemoveList< satisfiedComponents >::r;
+
+			static_assert( satisfiedComponents::Length::r, "Unable to create all components - dependencies not met" );
+			
+			using enrichedLevel = typename satisfiedComponents
+											::template UnpackTo<
+												CurrentLevel::template Enrich >::r::r;
+
+			template< typename Ctx >
+			struct ApplyToOrderedLevelEnrich
+			{
+				template< typename... Comp >
+				using Apply = OrderedLevelEnrich< Ctx, Comp... >;
+			};
+
+		public:
+			using r = typename unsatisfiedComponents::template UnpackTo<
+									ApplyToOrderedLevelEnrich<
+										Context< enrichedLevel, ParentLevel... > >::template Apply >::r::r;
+		};
+
+
 		template< typename... NewType >
 		struct FilterComponents
 		{
@@ -141,43 +166,22 @@ namespace rod
 		};
 
 
-		template< typename Ctx, typename... NewType >
-		struct OrderByDependencies
-		{
-		private:
-			using filter = FilterComponents< NewType... >;
-			using sortedComponents = typename SortComponentsByDependency<
-												typename filter::Components,
-												typename Ctx::GetComponents::r >::r;
-
-		public:
-			using r = typename filter::NotComponents::template AppendAll< sortedComponents >::r;
-		};
-
-
-		template< typename Ctx, typename... NewType >
-		struct CreateChildContext;
-
-		template< typename... CtxLevel, typename... NewType >
-		struct CreateChildContext< Context< CtxLevel... >, NewType... >
-		{
-			using r = Context<
-						typename CreateContextLevel< NewType... >::r,
-						CtxLevel... >;
-		};
-
-
 		template< typename Context, typename... NewType >
 		struct Enrich;
 
 		template< typename CurrentLevel, typename... ParentLevel, typename... NewType >
 		struct Enrich< Context< CurrentLevel, ParentLevel... >, NewType... >
 		{
-			using r = Context<
-						typename OrderByDependencies<
-									Context< CurrentLevel, ParentLevel... >,
-									NewType... >::r::template UnpackTo< CurrentLevel::template Enrich >::r::r,
-						ParentLevel... >;
+		private:
+			using filtered = FilterComponents< NewType... >;
+			using nonComponentEnriched = typename filtered::NotComponents::template UnpackTo<
+											CurrentLevel::template Enrich >::r::r;
+			using enriched = typename filtered::Components::template UnpackTo1<
+										OrderedLevelEnrich,
+										Context< nonComponentEnriched, ParentLevel... > >::r::r;
+
+		public:
+			using r = Context< enriched, ParentLevel... >;
 		};
 
 
@@ -361,6 +365,13 @@ namespace rod
 			enum { r = false };
 		};
 
+
+		template< typename Ctx, typename ToResolve >
+		struct CanResolve
+		{
+			enum { r = Ctx::GetComponents::r::template Contains< ToResolve >::r };
+		};							
+
 	}
 
 
@@ -429,6 +440,9 @@ namespace rod
 
 		template< typename Component >
 		using FindOwningContext = context::FindOwningContext< This, Component >;
+
+		template< typename ToResolve >
+		using CanResolve = context::CanResolve< This, ToResolve >;
 
 
 		template< typename... ToInject >

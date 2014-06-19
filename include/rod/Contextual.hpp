@@ -145,7 +145,7 @@ namespace rod
 	createPtr( Parent* parent, ToInject&&... toInject )
 		-> decltype( parent->template createPtr< ToCreate, TypeList< ToAdd... > >() )
 	{
-		return parent->template createPtr< ToCreate, TypeList< ToAdd... > >();
+		return parent->template createPtr< ToCreate, TypeList< ToAdd... > >( std::forward< ToInject >( toInject )... );
 	}
 
 	template< typename ToResolve, typename BindingContextual >
