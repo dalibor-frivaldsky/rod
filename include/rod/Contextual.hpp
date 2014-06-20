@@ -122,8 +122,9 @@ namespace rod
 		}
 
 		template< typename ToResolve >
-		ToResolve&
+		auto
 		resolve()
+			-> decltype( context.template resolve< ToResolve >() )
 		{
 			return context.template resolve< ToResolve >();
 		}
@@ -149,8 +150,9 @@ namespace rod
 	}
 
 	template< typename ToResolve, typename BindingContextual >
-	ToResolve&
+	auto
 	resolve( BindingContextual* bindingContextual )
+		-> decltype( bindingContextual->template resolve< ToResolve >() )
 	{
 		return bindingContextual->template resolve< ToResolve >();
 	}

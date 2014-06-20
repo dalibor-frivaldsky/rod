@@ -35,6 +35,7 @@
 #include <rod/ContextLevel.hpp>
 #include <rod/TypeList.hpp>
 #include <rod/annotation/Component.hpp>
+#include <rod/annotation/Resolver.hpp>
 #include <rod/holder/InjectedReference.hpp>
 #include <rod/holder/InjectedValue.hpp>
 
@@ -370,7 +371,62 @@ namespace rod
 		struct CanResolve
 		{
 			enum { r = Ctx::GetComponents::r::template Contains< ToResolve >::r };
-		};							
+		};
+
+
+		template< typename Ctx, typename ToRetrieve >
+		struct CanRetrieve
+		{
+			enum { r = Ctx::GetComponents::r::template Contains< ToRetrieve >::r };
+		};
+
+
+		template< typename Ctx, typename ToResolve >
+		struct FindResolvers
+		{
+			private:
+			using allResolvers = typename Ctx::template FindRegisteredType< annotation::IsResolver >::r;
+
+			template< typename Next, typename Result >
+			struct AppendIfResolves
+			{
+				using r = typename std::conditional<
+							Next::Resolver::template Selector< ToResolve >::r,
+							typename Result::template Append< Next >::r,
+							Result >::type;
+			};
+
+
+			template< typename Resolvers >
+			struct SelectAble;
+
+			template< typename... Resolver >
+			struct SelectAble< TypeList< Resolver... > >
+			{
+				using r = typename Reduce<
+							AppendIfResolves,
+							TypeList<>,
+							Resolver... >::r;
+			};
+
+
+		public:
+			using r = typename SelectAble< allResolvers >::r;
+		};
+
+
+		template< typename Ctx, typename ToResolve >
+		struct GetResolver
+		{
+			using r = typename FindResolvers< Ctx, ToResolve >::r::Head::r;
+		};
+
+
+		template< typename Ctx, typename ToResolve >
+		struct HasResolver
+		{
+			enum { r = FindResolvers< Ctx, ToResolve >::r::Length::r > 0 };
+		};
 
 	}
 
@@ -462,7 +518,9 @@ namespace rod
 		}
 
 		template< typename ToResolve >
-		ToResolve&
+		typename std::enable_if<
+			context::CanRetrieve< This, ToResolve >::r,
+			ToResolve& >::type
 		resolve()
 		{
 			return retrieve< ToResolve >();
@@ -494,6 +552,15 @@ namespace rod
 				
 				return this->template retrieve< implementor >();
 			}*/
+		}
+
+		template< typename ToResolve >
+		typename std::enable_if<
+			context::HasResolver< This, ToResolve >::r,
+			ToResolve >::type
+		resolve()
+		{
+			return context::GetResolver< This, ToResolve >::r::template resolve< ToResolve >();
 		}
 
 
