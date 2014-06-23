@@ -279,6 +279,20 @@ namespace rod
 		};
 
 
+		template< typename Dep >
+		struct CreateLambda
+		{
+			template< typename Ctx >
+			static
+			auto
+			create( Ctx* ctx )
+				-> std::function< decltype( ctx->template resolve< Dep >() )() >
+			{
+				return [ctx] () -> decltype( ctx->template resolve< Dep >() ) { return ctx->template resolve< Dep >(); };
+			}
+		};
+
+
 		template< typename Deps >
 		struct GatherDeps;
 
@@ -286,19 +300,6 @@ namespace rod
 		struct GatherDeps< TypeList< Dep... > >
 		{
 		private:
-			template< typename D >
-			struct CreateLambda
-			{
-				template< typename Ctx >
-				static
-				std::function< D&() >
-				create( Ctx* ctx )
-				{
-					return [ctx] () -> D& { return ctx->template resolve< D >(); };
-				}
-			};
-
-
 			template< typename ToInject >
 			struct CreateInjectLambda;
 			
@@ -428,6 +429,24 @@ namespace rod
 			enum { r = FindResolvers< Ctx, ToResolve >::r::Length::r > 0 };
 		};
 
+
+		template< typename Resolver, typename ToResolve, typename Deps >
+		struct ResolverResolve;
+
+		template< typename Resolver, typename ToResolve, typename... Dep >
+		struct ResolverResolve< Resolver, ToResolve, TypeList< Dep... > >
+		{
+			template< typename Ctx >
+			static
+			ToResolve
+			resolve( Ctx* ctx )
+			{
+				return Resolver::template resolve< ToResolve >(
+						CreateLambda< Dep >::create( ctx )... );
+			}
+
+		};
+
 	}
 
 
@@ -519,11 +538,11 @@ namespace rod
 
 		template< typename ToResolve >
 		typename std::enable_if<
-			context::CanRetrieve< This, ToResolve >::r,
+			context::CanRetrieve< This, typename std::decay< ToResolve >::type >::r,
 			ToResolve& >::type
 		resolve()
 		{
-			return retrieve< ToResolve >();
+			return retrieve< typename std::decay< ToResolve >::type >();
 
 			/*std::string					toResolveName = common::typeName< ToResolve >();
 			configuration::Interfaces&	interfacesConfig = this->template retrieve< configuration::Interfaces >();
@@ -560,7 +579,10 @@ namespace rod
 			ToResolve >::type
 		resolve()
 		{
-			return context::GetResolver< This, ToResolve >::r::template resolve< ToResolve >();
+			using resolver = typename context::GetResolver< This, ToResolve >::r;
+			using deps = typename resolver::template GetDependencies< ToResolve >::r;
+
+			return context::ResolverResolve< resolver, ToResolve, deps >::resolve( this );
 		}
 
 
