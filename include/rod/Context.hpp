@@ -279,6 +279,21 @@ namespace rod
 		};
 
 
+		template< typename Ctx, typename Interface >
+		struct FindImplementors
+		{
+		private:
+			template< typename Implementor >
+			struct IsImplementor
+			{
+				enum { r = std::is_base_of< Interface, Implementor >::value };
+			};
+
+		public:
+			using r = typename Ctx::GetComponents::r::template Select< IsImplementor >::r;
+		};
+
+
 		template< typename Dep >
 		struct CreateLambda
 		{
@@ -376,7 +391,7 @@ namespace rod
 
 		public:
 			enum { r = std::is_lvalue_reference< ToRetrieve >::value &&
-					   Ctx::GetComponents::r::template Contains< decayed >::r };
+					   FindImplementors< Ctx, decayed >::r::Length::r > 0 };
 		};
 
 
@@ -489,7 +504,7 @@ namespace rod
 	{
 
 		template< typename... Level >
-		friend class Context;
+		friend struct Context;
 
 	private:
 
@@ -548,7 +563,10 @@ namespace rod
 			ToResolve >::type
 		resolve()
 		{
-			return retrieve< typename std::decay< ToResolve >::type >();
+			using decayed = typename std::decay< ToResolve >::type;
+			using implementor = typename context::FindImplementors< This, decayed >::r::Head::r;
+
+			return retrieve< implementor >();
 
 			/*std::string					toResolveName = common::typeName< ToResolve >();
 			configuration::Interfaces&	interfacesConfig = this->template retrieve< configuration::Interfaces >();

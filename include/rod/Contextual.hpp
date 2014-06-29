@@ -55,7 +55,7 @@ namespace rod
 		public:
 			using r = typename TypeList< ToInject... >::template Apply< MakeToBeInjected >::r;
 		};
-		
+
 	}
 
 
@@ -122,9 +122,8 @@ namespace rod
 		}
 
 		template< typename ToResolve >
-		auto
+		ToResolve
 		resolve()
-			-> decltype( context.template resolve< ToResolve >() )
 		{
 			return context.template resolve< ToResolve >();
 		}
@@ -150,9 +149,8 @@ namespace rod
 	}
 
 	template< typename ToResolve, typename BindingContextual >
-	auto
+	ToResolve
 	resolve( BindingContextual* bindingContextual )
-		-> decltype( bindingContextual->template resolve< ToResolve >() )
 	{
 		return bindingContextual->template resolve< ToResolve >();
 	}
@@ -182,7 +180,7 @@ namespace rod
 // MSVC2013 does not accept "template" there, nor does it accept rod::resolve< cls >( this )
 // when initializing members outside of the constructor initialization list
 #if defined( __GNUC__ )
-	#define ROD_Resolve( cls )	this->template resolve< cls >()
+	#define ROD_Resolve( cls )	rod::resolve< cls >( this )
 #elif defined( _MSC_VER )
 	#define ROD_Resolve( cls )	this->resolve< cls >()
 #else
