@@ -368,17 +368,15 @@ namespace rod
 		};
 
 
-		template< typename Ctx, typename ToResolve >
-		struct CanResolve
-		{
-			enum { r = Ctx::GetComponents::r::template Contains< ToResolve >::r };
-		};
-
-
 		template< typename Ctx, typename ToRetrieve >
 		struct CanRetrieve
 		{
-			enum { r = Ctx::GetComponents::r::template Contains< ToRetrieve >::r };
+		private:
+			using decayed = typename std::decay< ToRetrieve >::type;
+
+		public:
+			enum { r = std::is_lvalue_reference< ToRetrieve >::value &&
+					   Ctx::GetComponents::r::template Contains< decayed >::r };
 		};
 
 
@@ -445,6 +443,14 @@ namespace rod
 						CreateLambda< Dep >::create( ctx )... );
 			}
 
+		};
+
+
+		template< typename Ctx, typename ToResolve >
+		struct CanResolve
+		{
+			enum { r = CanRetrieve< Ctx, ToResolve >::r ||
+					   HasResolver< Ctx, ToResolve >::r };
 		};
 
 	}
@@ -538,8 +544,8 @@ namespace rod
 
 		template< typename ToResolve >
 		typename std::enable_if<
-			context::CanRetrieve< This, typename std::decay< ToResolve >::type >::r,
-			ToResolve& >::type
+			context::CanRetrieve< This, ToResolve >::r,
+			ToResolve >::type
 		resolve()
 		{
 			return retrieve< typename std::decay< ToResolve >::type >();

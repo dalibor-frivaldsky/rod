@@ -280,13 +280,6 @@ namespace rod
 			}
 
 
-			template< typename ToDecay >
-			struct Decay
-			{
-				using r = typename std::decay< ToDecay >::type;
-			};
-
-
 		public:
 			template< typename... Arg, int... Seq >
 			static
@@ -296,11 +289,10 @@ namespace rod
 								argTuple,
 								typename GetSequence<
 											deps,
-											typename TypeList< decltype( std::get< Seq >( argTuple )() )... >
-												::template Apply< Decay >::r >::r() ) )
+											TypeList< decltype( std::get< Seq >( argTuple )() )... >
+										 >::r() ) )
 			{
-				using argTypesUndecayed = TypeList< decltype( std::get< Seq >( argTuple )() )... >;
-				using argTypes = typename argTypesUndecayed::template Apply< Decay >::r;
+				using argTypes = TypeList< decltype( std::get< Seq >( argTuple )() )... >;
 				using seq = typename GetSequence< deps, argTypes >::r;
 
 				return createTuple( argTuple, seq() );
