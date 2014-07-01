@@ -9,6 +9,7 @@
 #include <rod/AsContextual.hpp>
 #include <rod/AsSingleton.hpp>
 #include <rod/Context.hpp>
+#include <rod/ContextualAccessor.hpp>
 #include <rod/Generate.hpp>
 #include <rod/ToBeInjected.hpp>
 #include <rod/TypeList.hpp>
@@ -62,6 +63,10 @@ namespace rod
 	template< typename InterimContext, typename... NewType >
 	class Contextual
 	{
+		template< typename BoundContextual >
+		friend class ContextualAccessor;
+
+
 	private:
 
 		using This = Contextual< InterimContext, NewType... >;

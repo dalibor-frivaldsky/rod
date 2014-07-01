@@ -534,6 +534,9 @@ namespace rod
 
 		using GetComponents = context::GetComponents< This >;
 
+		template< typename Interface >
+		using FindImplementors = context::FindImplementors< This, Interface >;
+
 		template< typename Component >
 		using FindOwningContext = context::FindOwningContext< This, Component >;
 
