@@ -1,7 +1,6 @@
 #pragma once
 
 
-#include <rod/Context.hpp>
 #include <rod/annotation/ContextualRecord.hpp>
 
 
@@ -15,7 +14,8 @@ namespace rod
 	{
 		using ContextualRecord = annotation::ContextualRecord;
 
-		using Type = AsContextual< ContextualType >;
+		template< typename Context >
+		using Contextual = ContextualType< Context >;
 
 		template< typename Context >
 		struct Bind
