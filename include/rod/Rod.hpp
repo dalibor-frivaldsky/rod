@@ -50,27 +50,27 @@ namespace rod
 		ROD_Contextual_Constructor( Rod )
 
 
-		template< template< typename > class Domain >
+		template< template< typename > class Domain, typename... ToInject >
 		void
-		enter( const std::string& configurationFilePath )
+		enter( ToInject&&... toInject )
 		{
 			//enterDomain< Domain >( create< configuration::ConfigurationReader >( this )->read( configurationFilePath ) );
-			::rod::create< configuration::ConfigurationReader >( this ).read( configurationFilePath );
-			::rod::create< Domain >( this ).enter();
+			::rod::create< configuration::ConfigurationReader >( this ).read( "" );
+			::rod::create< Domain >( this, std::forward< ToInject >( toInject )... ).enter();
 		}
 	};
 
 
-	template< template< typename > class Domain >
+	template< template< typename > class Domain, typename... ToInject >
 	void
-	enter( const std::string& configurationFilePath = "" )
+	enter( ToInject&&... toInject )
 	{
 		using initialContext = CreateInitialContext<>::r;
 		using boundRod = Rod< initialContext >;
 
 		auto		nullCtx = createNullContext();
 		boundRod	r( nullCtx );
-		r.enter< Domain >( configurationFilePath );
+		r.enter< Domain >( std::forward< ToInject >( toInject )... );
 	}
 
 	template< template< typename > class Domain >
