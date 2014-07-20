@@ -90,6 +90,9 @@ namespace rod
 		template< template< typename > class Selector >
 		using FindRegisteredType = typename Ctx::template FindRegisteredType< Selector >;
 
+		template< template< typename > class Selector >
+		using FindRegisteredContextual = typename Ctx::template FindRegisteredContextual< Selector >;
+
 
 		template< typename... ToInject >
 		Contextual( typename Ctx::ParentContext& parentContext, ToInject&&... toInject ):
