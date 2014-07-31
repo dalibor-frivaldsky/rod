@@ -8,6 +8,7 @@
 
 #include <rod/AsContextual.hpp>
 #include <rod/AsSingleton.hpp>
+#include <rod/Bind.hpp>
 #include <rod/Context.hpp>
 #include <rod/ContextualAccessor.hpp>
 #include <rod/Generate.hpp>
@@ -32,29 +33,10 @@ namespace rod
 		template< template< typename > class ToCreate, typename Parent, typename... ToInject, typename... ToAdd >
 		struct BindContextual< ToCreate, Parent, TypeList< ToInject... >, TypeList< ToAdd... > >
 		{
-		private:
-			using injectContext = typename Parent::Ctx::template CreateChildContext< ToInject... >::r;
-			using interimContext = typename injectContext::template Enrich< ToAdd... >::r;
-
-		public:
-			using r = ToCreate< interimContext >;
-		};
-
-
-		template< typename... ToInject >
-		struct AsToInjectedComponentList
-		{
-		private:
-
-			template< typename T >
-			struct MakeToBeInjected
-			{
-				using r = ToBeInjected< T >;
-			};
-
-
-		public:
-			using r = typename TypeList< ToInject... >::template Apply< MakeToBeInjected >::r;
+			using r = typename Bind< Parent, ToCreate >
+								::template Add< ToAdd... >::r
+								::template Inject< ToInject... >::r
+								::r;
 		};
 
 	}
@@ -105,12 +87,11 @@ namespace rod
 		typename contextual::BindContextual<
 					ToCreate,
 					This,
-					typename contextual::AsToInjectedComponentList< ToInject... >::r,
+					TypeList< ToInject... >,
 					ToAddList >::r
 		create( ToInject&&... toInject )
 		{
-			using toInjectList = typename contextual::AsToInjectedComponentList< ToInject... >::r;
-			using toCreate = typename contextual::BindContextual< ToCreate, This, toInjectList, ToAddList >::r;
+			using toCreate = typename contextual::BindContextual< ToCreate, This, TypeList< ToInject... >, ToAddList >::r;
 
 			return toCreate( this->context, std::forward< ToInject >( toInject )... );
 		}
@@ -119,12 +100,11 @@ namespace rod
 		typename contextual::BindContextual<
 					ToCreate,
 					This,
-					typename contextual::AsToInjectedComponentList< ToInject... >::r,
+					TypeList< ToInject... >,
 					ToAddList >::r*
 		createPtr( ToInject&&... toInject )
 		{
-			using toInjectList = typename contextual::AsToInjectedComponentList< ToInject... >::r;
-			using toCreate = typename contextual::BindContextual< ToCreate, This, toInjectList, ToAddList >::r;
+			using toCreate = typename contextual::BindContextual< ToCreate, This, TypeList< ToInject... >, ToAddList >::r;
 
 			return new toCreate( this->context, std::forward< ToInject >( toInject )... );
 		}

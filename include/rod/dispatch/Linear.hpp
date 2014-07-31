@@ -3,7 +3,7 @@
 
 #include <utility>
 
-#include <rod/BindContextual.hpp>
+#include <rod/Bind.hpp>
 #include <rod/ContextualAccessor.hpp>
 
 
@@ -90,9 +90,9 @@ namespace rod
 
 
 			template< typename BR >
-			struct Bind
+			struct BindBranch
 			{
-				using r = typename BindContextual< ParentContextual, BR::template Contextual >::r;
+				using r = typename Bind< ParentContextual, BR::template Contextual >::r;
 			};
 
 
@@ -108,7 +108,7 @@ namespace rod
 				linear::DispatchChain<
 					BranchHandle,
 					BranchPerformer,
-					typename Bind< BranchRecord >::r... >
+					typename BindBranch< BranchRecord >::r... >
 						::perform( parentContextual, handle, std::forward< ToPass >( toPass )... );
 			}
 		};
