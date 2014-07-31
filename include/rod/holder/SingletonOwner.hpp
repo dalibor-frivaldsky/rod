@@ -1,6 +1,8 @@
 #pragma once
 
 
+#include <utility>
+
 #include <rod/annotation/ConstructWith.hpp>
 
 
@@ -25,6 +27,13 @@ namespace rod
 			SingletonOwner( Arg&... arg ):
 			  object( arg()... )
 			{}
+
+			SingletonOwner( SingletonOwner< Type >&& other ):
+			  object( std::move( other.object ) )
+			{}
+
+			SingletonOwner( const SingletonOwner< Type >& ) = delete;
+
 
 			Type&
 			get()

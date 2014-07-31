@@ -112,6 +112,12 @@ namespace rod
 		  container( std::forward< ArgTuple >( argTuple ) )
 		{}
 
+		ContextLevel( ContextLevel< Registry, Container >&& other ):
+		  container( std::move( other.container ) )
+		{}
+
+		ContextLevel( const ContextLevel< Registry, Container >& ) = delete;
+
 
 		template< typename... NewType >
 		using Enrich = contextLevel::Enrich< This, NewType... >;

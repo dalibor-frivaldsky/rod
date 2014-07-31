@@ -33,6 +33,13 @@ namespace rod
 			  object( std::move( ref().object ) )
 			{}
 
+			ObjectOwner( ObjectOwner< Type >&& other ):
+			  object( std::move( other.object ) )
+			{}
+
+			ObjectOwner( const ObjectOwner< Type >& ) = delete;
+
+
 			Type&
 			get()
 			{
