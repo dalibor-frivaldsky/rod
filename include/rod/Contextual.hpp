@@ -81,6 +81,20 @@ namespace rod
 		  context( parentContext, std::forward< ToInject >( toInject )... )
 		{}
 
+		Contextual( This&& other ):
+		  context( std::move( other.context ) )
+		{}
+
+		This&
+		operator = ( This&& other )
+		{
+			this->context = std::move( other.context );
+			return *this;
+		}
+
+				Contextual( const This& ) = delete;
+		This&	operator = ( const This& ) = delete;
+
 		
 
 		template< template< typename > class ToCreate, typename ToAddList, typename... ToInject >

@@ -27,17 +27,6 @@ namespace rod
 	namespace context
 	{
 
-		template< typename ParentContext >
-		struct ParentContextRef
-		{
-			ParentContext&	parentContext;
-
-			ParentContextRef( ParentContext& parentContext ):
-			  parentContext( parentContext )
-			{}
-		};
-
-
 		template< typename Ctx, typename... NewType >
 		struct CreateChildContext;
 
@@ -529,10 +518,8 @@ namespace rod
 		using This = Context< CurrentLevel, ParentLevel... >;
 
 
-		// TODO is the ParentContextRef still necessary?
-		context::ParentContextRef< Context< ParentLevel... > >		parentRef;
-
-		CurrentLevel		currentLevel;
+		Context< ParentLevel... >&	parent;
+		CurrentLevel				currentLevel;
 	
 
 	public:
@@ -567,7 +554,7 @@ namespace rod
 
 		template< typename... ToInject >
 		Context( ParentContext& parentContext, ToInject&&... toInject ):
-		  parentRef( parentContext ),
+		  parent( parentContext ),
 		  currentLevel( context::GatherDeps<
 		  					typename CurrentLevel::GetDependencies::r
 		  						::template RemoveBy< context::IsInjected >::r >
@@ -662,7 +649,7 @@ namespace rod
 						ToAccessContext >::type&
 		accessContext()
 		{
-			return parentRef.parentContext.template accessContext< ToAccessContext >();
+			return parent.template accessContext< ToAccessContext >();
 		}
 
 	};
