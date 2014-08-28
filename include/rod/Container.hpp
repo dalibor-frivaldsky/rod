@@ -39,15 +39,7 @@ namespace rod
 
 		template<>
 		struct HolderBase<>
-		{
-			inline
-			HolderBase()
-			{}
-
-			inline
-			~HolderBase()
-			{}
-		};
+		{};
 
 		template< typename Holder >
 		struct HolderConstructor:
@@ -58,12 +50,6 @@ namespace rod
 							   common::Sequence< Seq... >&& ):
 			  Holder( std::get< Seq >( argTuple )... )
 			{}
-
-			HolderConstructor( HolderConstructor< Holder >&& other ):
-			  Holder( std::move( other ) )
-			{}
-
-			HolderConstructor( const HolderConstructor< Holder >& ) = delete;
 		};
 
 		template< typename... Holder >
@@ -74,12 +60,6 @@ namespace rod
 			HolderBase( ArgTuple&&... argTuple ):
 			  HolderConstructor< Holder >( argTuple, typename common::GenerateSequence< std::tuple_size< ArgTuple >::value >::r() )...
 			{}
-
-			HolderBase( HolderBase< Holder... >&& other ):
-			  HolderConstructor< Holder >( std::move( other ) )...
-			{}
-
-			HolderBase( const HolderBase< Holder... >& ) = delete;
 		};
 
 
@@ -349,12 +329,6 @@ namespace rod
 		Container( ArgTuple&&, typename std::enable_if< (Holders::Length::r == 0), void >::type* hasHolders = 0 ):
 			HolderBase()
 		{}
-
-		Container( Container< ComponentHolder... >&& other ):
-		  HolderBase( (HolderBase&&) std::move( other ) )
-		{}
-
-		Container( const Container< ComponentHolder... >& ) = delete;
 
 
 		template< typename Type >

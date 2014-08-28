@@ -32,13 +32,18 @@ namespace rod
 			  object( ref().object )
 			{}
 
+			ObjectReference( const ObjectReference< Type >& other ):
+			  object( other.object )
+			{}
+
 			ObjectReference( ObjectReference< Type >&& other ):
 			  object( other.object )
 			{}
 
-			ObjectReference( const ObjectReference< Type >& ) = delete;
+			ObjectReference< Type >& operator = ( const ObjectReference< Type >& ) = delete;
+			ObjectReference< Type >& operator = ( ObjectReference< Type >&& ) = delete;
 
-
+			
 			Type&
 			get()
 			{

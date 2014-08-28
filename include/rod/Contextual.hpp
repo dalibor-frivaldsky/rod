@@ -81,19 +81,10 @@ namespace rod
 		  context( parentContext, std::forward< ToInject >( toInject )... )
 		{}
 
-		Contextual( This&& other ):
-		  context( std::move( other.context ) )
-		{}
-
-		This&
-		operator = ( This&& other )
-		{
-			this->context = std::move( other.context );
-			return *this;
-		}
-
-				Contextual( const This& ) = delete;
+				Contextual( const This& ) = default;
+				Contextual( This&& ) = delete;
 		This&	operator = ( const This& ) = delete;
+		This&	operator = ( This&& ) = delete;
 
 		
 

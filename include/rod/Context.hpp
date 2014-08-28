@@ -561,12 +561,8 @@ namespace rod
 		  							::gather( this, std::forward< ToInject >( toInject )... ) )
 		{}
 
-		Context( Context< CurrentLevel, ParentLevel... >&& other ):
-		  parent( other.parent ),
-		  currentLevel( std::move( other.currentLevel ) )
-		{}
-
-		Context( const Context< CurrentLevel, ParentLevel... >& ) = delete;
+		Context( const This& ) = default;
+		Context( This&& ) = delete;
 
 
 		CurrentLevel&
