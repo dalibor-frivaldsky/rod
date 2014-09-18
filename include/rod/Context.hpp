@@ -481,6 +481,15 @@ namespace rod
 	template<>
 	struct Context<>
 	{
+	private:
+		using This = Context<>;
+
+
+	public:
+		template< typename... NewType >
+		using CreateChildContext = context::CreateChildContext< This, NewType... >;
+
+
 		inline
 		Context()
 		{}

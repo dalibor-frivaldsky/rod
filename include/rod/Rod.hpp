@@ -13,9 +13,7 @@
 
 #include <string>
 
-#include <rod/Context.hpp>
-#include <rod/Contextual.hpp>
-#include <rod/configuration/ConfigurationReader.hpp>
+#include <rod/Root.hpp>
 
 
 
@@ -23,13 +21,13 @@
 namespace rod
 {
 
-	template< typename Context >
+	/*template< typename Context >
 	class Rod:
 		public Contextual< Context >
 	{
 	private:
 
-		/*template< template< typename > class Domain, typename InitialObjectsTuple, int... Seq >
+		template< template< typename > class Domain, typename InitialObjectsTuple, int... Seq >
 		void
 		enterDomainSequential( InitialObjectsTuple&& initialObjects, common::Sequence< Seq... >&& )
 		{
@@ -42,7 +40,7 @@ namespace rod
 		{
 			using seq = typename common::GenerateSequence< sizeof...( InitialObject ) >::r;
 			enterDomainSequential< Domain >( std::move( initialObjects ), seq() );
-		}*/
+		}
 
 
 	public:
@@ -58,10 +56,12 @@ namespace rod
 			::rod::create< configuration::ConfigurationReader >( this ).read( "" );
 			::rod::create< Domain >( this, std::forward< ToInject >( toInject )... ).enter();
 		}
-	};
+	};*/
 
 
-	template< template< typename > class Domain, typename... ToInject >
+	
+
+	/*template< template< typename > class Domain, typename... ToInject >
 	void
 	enter( ToInject&&... toInject )
 	{
@@ -83,6 +83,16 @@ namespace rod
 		auto			nullCtx = createNullContext();
 		boundDomain		domain( nullCtx );
 		domain.enter();
+	}*/
+
+
+	template< typename EntryClosure >
+	void
+	enter( EntryClosure&& entryClosure )
+	{
+		rod::Root	root;
+
+		entryClosure( root );
 	}
 	
 }
