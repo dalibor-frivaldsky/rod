@@ -60,11 +60,15 @@ namespace rod
 	namespace extendDetail
 	{
 
-		template< typename Parent >
-		struct ContextBuilder
+		template< typename Parent, typename NewTypes >
+		struct ContextBuilder;
+
+		template< typename Parent, typename... NewType >
+		struct ContextBuilder< Parent, TypeList< NewType... > >
 		{
 		private:
-			using BuiltOwner = typename Extend< Parent >::r;
+			using BuiltOwner = typename Extend< Parent >
+									::template With< NewType... >::r;
 
 
 			Parent&		parent;
@@ -80,16 +84,27 @@ namespace rod
 			{
 				return BuiltOwner( parent );
 			}
+
+			template< typename... Type >
+			ContextBuilder<
+				Parent,
+				TypeList< NewType..., Type... > >
+			with()
+			{
+				return ContextBuilder<
+							Parent,
+							TypeList< NewType..., Type... > >( parent );
+			}
 		};
 		
 	}
 
 
 	template< typename Parent >
-	extendDetail::ContextBuilder< Parent >
+	extendDetail::ContextBuilder< Parent, TypeList<> >
 	extend( Parent& parent )
 	{
-		return extendDetail::ContextBuilder< Parent >( parent );
+		return extendDetail::ContextBuilder< Parent, TypeList<> >( parent );
 	}
 	
 }

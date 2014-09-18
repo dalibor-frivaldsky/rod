@@ -112,6 +112,30 @@ namespace rod
 		  container( std::forward< ArgTuple >( argTuple ) )
 		{}
 
+		ContextLevel( const This& other ):
+		  container( other.container )
+		{}
+
+		ContextLevel( This&& other ):
+		  container( std::move( other.container ) )
+		{}
+
+		This&
+		operator = ( const This& other )
+		{
+			this->container = other.container;
+
+			return *this;
+		}
+
+		This&
+		operator = ( This&& other )
+		{
+			this->container = std::move( other.container );
+
+			return *this;
+		}
+
 
 		template< typename... NewType >
 		using Enrich = contextLevel::Enrich< This, NewType... >;

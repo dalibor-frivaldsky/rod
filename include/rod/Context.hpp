@@ -406,7 +406,7 @@ namespace rod
 		struct FindResolvers
 		{
 			private:
-			using allResolvers = typename Ctx::template FindRegisteredType< annotation::IsResolver >::r;
+			using allResolvers = typename FindRegisteredType< Ctx, annotation::IsResolver >::r;
 
 			template< typename Next, typename Result >
 			struct AppendIfResolves
@@ -543,12 +543,6 @@ namespace rod
 
 		using GetTypeRegistry = context::GetTypeRegistry< This >;
 
-		template< template< typename > class Selector >
-		using FindRegisteredType = context::FindRegisteredType< This, Selector >;
-
-		template< template< typename > class Selector >
-		using FindRegisteredContextual = context::FindRegisteredContextual< This, Selector >;
-
 		using GetComponents = context::GetComponents< This >;
 
 		template< typename Interface >
@@ -570,8 +564,33 @@ namespace rod
 		  							::gather( this, std::forward< ToInject >( toInject )... ) )
 		{}
 
-		Context( const This& ) = default;
-		Context( This&& ) = delete;
+		Context( const This& other ):
+		  parent( other.parent ),
+		  currentLevel( other.currentLevel )
+		{}
+
+		Context( This&& other ):
+		  parent( other.parent ),
+		  currentLevel( std::move( other.currentLevel ) )
+		{}
+
+		This&
+		operator = ( const This& other )
+		{
+			this->parent = other.parent;
+			this->currentLevel = other.currentLevel;
+
+			return *this;
+		}
+
+		This&
+		operator = ( This&& other )
+		{
+			this->parent = other.parent;
+			this->currentLevel = std::move( other.currentLevel );
+
+			return *this;
+		}
 
 
 		CurrentLevel&

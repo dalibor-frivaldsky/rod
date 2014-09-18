@@ -1,6 +1,8 @@
 #pragma once
 
 
+#include <utility>
+
 #include <rod/Context.hpp>
 #include <rod/ContextAccessor.hpp>
 
@@ -61,6 +63,14 @@ namespace rod
 	public:
 		ContextOwner( ContextOwner< typename ContextAccessor< This >::Context::ParentContext >& parent ):
 		  context( accessContext( parent ) )
+		{}
+
+		ContextOwner( const This& other ):
+		  context( other.context )
+		{}
+
+		ContextOwner( This&& other ):
+		  context( std::move( other.context ) )
 		{}
 	};
 	

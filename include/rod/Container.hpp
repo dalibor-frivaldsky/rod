@@ -45,10 +45,23 @@ namespace rod
 		struct HolderConstructor:
 			public Holder
 		{
+		private:
+			using This = HolderConstructor< Holder >;
+
+
+		public:
 			template< typename... Arg, int... Seq >
 			HolderConstructor( std::tuple< Arg... >& argTuple,
 							   common::Sequence< Seq... >&& ):
 			  Holder( std::get< Seq >( argTuple )... )
+			{}
+
+			HolderConstructor( const This& other ):
+			  Holder( other )
+			{}
+
+			HolderConstructor( This&& other ):
+			  Holder( std::move( other ) )
 			{}
 		};
 
@@ -56,9 +69,22 @@ namespace rod
 		struct HolderBase:
 		  public HolderConstructor< Holder >...
 		{
+		private:
+			using This = HolderBase< Holder... >;
+
+
+		public:
 			template< typename... ArgTuple >
 			HolderBase( ArgTuple&&... argTuple ):
 			  HolderConstructor< Holder >( argTuple, typename common::GenerateSequence< std::tuple_size< ArgTuple >::value >::r() )...
+			{}
+
+			HolderBase( const This& other ):
+			  HolderConstructor< Holder >( other )...
+			{}
+
+			HolderBase( This&& other ):
+			  HolderConstructor< Holder >( std::move( other ) )
 			{}
 		};
 
@@ -320,15 +346,39 @@ namespace rod
 		// and choose one based on the ComponentHolder pack size
 		template< typename ArgTuple, typename Holders = TypeList< ComponentHolder... > >
 		Container( ArgTuple&& argTuple, typename std::enable_if< (Holders::Length::r > 0), void >::type* hasHolders = 0 ):
-			HolderBase( container::ExtractDeps< ComponentHolder >::extract(
+		  HolderBase( container::ExtractDeps< ComponentHolder >::extract(
 							argTuple,
 							typename common::GenerateSequence< std::tuple_size< ArgTuple >::value >::r() )... )
 		{}
 
 		template< typename ArgTuple, typename Holders = TypeList< ComponentHolder... > >
 		Container( ArgTuple&&, typename std::enable_if< (Holders::Length::r == 0), void >::type* hasHolders = 0 ):
-			HolderBase()
+		  HolderBase()
 		{}
+
+		Container( const This& other ):
+		  HolderBase( other )
+		{}
+
+		Container( This&& other ):
+		  HolderBase( std::move( other ) )
+		{}
+
+		This&
+		operator = ( const This& other )
+		{
+			static_cast< HolderBase >( *this ) = other;
+
+			return *this;
+		}
+
+		This&
+		operator = ( This&& other )
+		{
+			static_cast< HolderBase >( *this ) = std::move( other );
+
+			return *this;
+		}
 
 
 		template< typename Type >
