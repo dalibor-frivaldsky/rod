@@ -84,7 +84,7 @@ namespace rod
 			{}
 
 			HolderBase( This&& other ):
-			  HolderConstructor< Holder >( std::move( other ) )
+			  HolderConstructor< Holder >( std::move( other ) )...
 			{}
 		};
 
@@ -357,11 +357,11 @@ namespace rod
 		{}
 
 		Container( const This& other ):
-		  HolderBase( other )
+		  HolderBase( static_cast< const HolderBase& >( other ) )
 		{}
 
 		Container( This&& other ):
-		  HolderBase( std::move( other ) )
+		  HolderBase( static_cast< HolderBase&& >( std::move( other ) ) )
 		{}
 
 		This&

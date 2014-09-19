@@ -12,10 +12,10 @@ namespace rod
 {
 
 	template< typename Type >
-	struct ToBeInjected;
+	struct Injected;
 
 	template< typename Type_ >
-	struct ToBeInjected< Type_& >
+	struct Injected< Type_& >
 	{
 		using Component = annotation::Component;
 
@@ -24,7 +24,7 @@ namespace rod
 	};
 
 	template< typename Type_ >
-	struct ToBeInjected< Type_&& >
+	struct Injected< Type_&& >
 	{
 		using Component = annotation::Component;
 
@@ -33,7 +33,7 @@ namespace rod
 	};
 
 	template< typename Type_ >
-	struct ToBeInjected
+	struct Injected
 	{
 		using Component = annotation::Component;
 

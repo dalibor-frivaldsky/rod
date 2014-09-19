@@ -40,8 +40,21 @@ namespace rod
 			  object( other.object )
 			{}
 
-			ObjectReference< Type >& operator = ( const ObjectReference< Type >& ) = delete;
-			ObjectReference< Type >& operator = ( ObjectReference< Type >&& ) = delete;
+			ObjectReference< Type >&
+			operator = ( const ObjectReference< Type >& other )
+			{
+				this->object = other.object;
+
+				return *this;
+			}
+
+			ObjectReference< Type >&
+			operator = ( ObjectReference< Type >&& other )
+			{
+				this->object = other.object;
+
+				return *this;
+			}
 
 			
 			Type&

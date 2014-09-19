@@ -2,7 +2,7 @@
 
 
 #include <rod/ContextualAccessor.hpp>
-#include <rod/ToBeInjected.hpp>
+#include <rod/Injected.hpp>
 #include <rod/TypeList.hpp>
 
 
@@ -33,15 +33,15 @@ namespace rod
 	{
 	private:
 		template< typename T >
-		struct MakeToBeInjected
+		struct MakeInjected
 		{
-			using r = ToBeInjected< T >;
+			using r = Injected< T >;
 		};
 
 
 		using accessor = ContextualAccessor< Parent >;
 		using injectContext = typename accessor::Context::template CreateChildContext<
-											typename MakeToBeInjected< ToInject >::r... >::r;
+											typename MakeInjected< ToInject >::r... >::r;
 		using interimContext = typename injectContext::template Enrich< ToAdd... >::r;
 
 

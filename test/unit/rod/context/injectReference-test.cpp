@@ -1,10 +1,8 @@
-#include "rod/Context.hpp"
-
-
 #include <cassert>
 #include <type_traits>
 
-#include "rod/ToBeInjected.hpp"
+#include <rod/Context.hpp>
+#include <rod/Injected.hpp>
 
 
 
@@ -43,7 +41,7 @@ test()
 {
 	{
 		using context = rod::CreateInitialContext<
-								rod::ToBeInjected< Component& >
+								rod::Injected< Component& >
 						>::r;
 
 		auto		nullCtx = rod::createNullContext();

@@ -24,7 +24,7 @@ namespace rod
 		struct ObjectOwner<
 				Type,
 				typename std::enable_if<
-					std::is_copy_constructible< Type >::value >::type >
+					std::is_constructible< Type, const Type& >::value >::type >
 		{
 
 		private:

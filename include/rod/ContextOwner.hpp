@@ -61,8 +61,10 @@ namespace rod
 
 
 	public:
-		ContextOwner( ContextOwner< typename ContextAccessor< This >::Context::ParentContext >& parent ):
-		  context( accessContext( parent ) )
+		template< typename... ToInject >
+		ContextOwner( ContextOwner< typename ContextAccessor< This >::Context::ParentContext >& parent,
+					  ToInject&&... toInject ):
+		  context( accessContext( parent ), std::forward< ToInject >( toInject )... )
 		{}
 
 		ContextOwner( const This& other ):

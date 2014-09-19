@@ -12,7 +12,7 @@
 #include <rod/Context.hpp>
 #include <rod/ContextualAccessor.hpp>
 #include <rod/Generate.hpp>
-#include <rod/ToBeInjected.hpp>
+#include <rod/Injected.hpp>
 #include <rod/TypeList.hpp>
 #include <rod/annotation/AutoResolve.hpp>
 #include <rod/annotation/ContextualRecord.hpp>

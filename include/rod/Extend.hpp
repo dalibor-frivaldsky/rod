@@ -1,12 +1,15 @@
 #pragma once
 
 
+#include <tuple>
 #include <type_traits>
 #include <utility>
 
 #include <rod/Context.hpp>
 #include <rod/ContextAccessor.hpp>
 #include <rod/ContextOwner.hpp>
+#include <rod/Injected.hpp>
+#include <rod/common/Sequence.hpp>
 
 
 
@@ -60,40 +63,62 @@ namespace rod
 	namespace extendDetail
 	{
 
-		template< typename Parent, typename NewTypes >
+		template< typename ToBuild >
+		struct OwnerBuilder
+		{
+			template< typename Parent, typename ToInjectTuple, int... Seq >
+			static
+			ToBuild
+			build( Parent& parent, ToInjectTuple& toInjectTuple, common::Sequence< Seq... >&& )
+			{
+				return ToBuild( parent, std::get< Seq >( toInjectTuple )... );
+			}
+		};
+
+
+		template< typename Parent, typename NewTypes, typename ToInjectTypes >
 		struct ContextBuilder;
 
-		template< typename Parent, typename... NewType >
-		struct ContextBuilder< Parent, TypeList< NewType... > >
+		template< typename Parent, typename... NewType, typename... ToInjectType >
+		struct ContextBuilder< Parent, TypeList< NewType... >, TypeList< ToInjectType... > >
 		{
 		private:
 			using BuiltOwner = typename Extend< Parent >
-									::template With< NewType... >::r;
+									::template With< Injected< ToInjectType >..., NewType... >::r;
 
 
-			Parent&		parent;
+			Parent&							parent;
+			std::tuple< ToInjectType... >	toInjectTuple;
 
 
 		public:
-			ContextBuilder( Parent& parent ):
-			  parent( parent )
+			ContextBuilder( Parent& parent, std::tuple< ToInjectType... >&& toInjectTuple ):
+			  parent( parent ),
+			  toInjectTuple( std::move( toInjectTuple ) )
 			{}
 
 			BuiltOwner
 			operator () ()
 			{
-				return BuiltOwner( parent );
+				using	seq = typename common::GenerateSequence< sizeof...( ToInjectType ) >::r;
+				return OwnerBuilder< BuiltOwner >::build( parent, toInjectTuple, seq() );
 			}
 
-			template< typename... Type >
+			template< typename... Type, typename... ToInject >
 			ContextBuilder<
 				Parent,
-				TypeList< NewType..., Type... > >
-			with()
+				TypeList< NewType..., Type... >,
+				TypeList< ToInjectType..., ToInject... > >
+			with( ToInject&&... toInject )
 			{
 				return ContextBuilder<
 							Parent,
-							TypeList< NewType..., Type... > >( parent );
+							TypeList< NewType..., Type... >,
+							TypeList< ToInjectType..., ToInject... > >(
+								parent,
+								std::tuple_cat(
+									toInjectTuple,
+									std::tuple< ToInject... >( std::forward< ToInject >( toInject )... ) ) );
 			}
 		};
 		
@@ -101,10 +126,15 @@ namespace rod
 
 
 	template< typename Parent >
-	extendDetail::ContextBuilder< Parent, TypeList<> >
+	extendDetail::ContextBuilder< Parent, TypeList<>, TypeList<> >
 	extend( Parent& parent )
 	{
-		return extendDetail::ContextBuilder< Parent, TypeList<> >( parent );
+		return extendDetail::ContextBuilder<
+				Parent,
+				TypeList<>,
+				TypeList<> >(
+					parent,
+					std::tuple<>() );
 	}
 	
 }

@@ -1,5 +1,4 @@
 #include <type_traits>
-#include <utility>
 
 #include <rod/Extend.hpp>
 #include <rod/Find.hpp>
@@ -19,7 +18,6 @@ test()
 	[] ( rod::Root& root )
 	{
 		auto context = rod::extend( root ).with< Type >()();
-		auto movedContext = std::move( context );
 
 		static_assert( std::is_same<
 							rod::Find<
