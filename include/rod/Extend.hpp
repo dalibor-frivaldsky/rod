@@ -71,7 +71,11 @@ namespace rod
 			ToBuild
 			build( Parent& parent, ToInjectTuple& toInjectTuple, common::Sequence< Seq... >&& )
 			{
-				return ToBuild( parent, std::get< Seq >( toInjectTuple )... );
+				return ToBuild(
+						parent,
+						std::forward<
+							typename std::tuple_element< Seq, ToInjectTuple >::type >(
+								std::get< Seq >( toInjectTuple ) )... );
 			}
 		};
 

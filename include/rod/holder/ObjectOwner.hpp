@@ -44,10 +44,25 @@ namespace rod
 			  object( other.object )
 			{}
 
-			ObjectOwner( ObjectOwner< Type >&& ) = delete;
+			ObjectOwner( ObjectOwner< Type >&& other ):
+			  object( std::move( other.object ) )
+			{}
 
-			ObjectOwner< Type >& operator = ( const ObjectOwner< Type >& ) = delete;
-			ObjectOwner< Type >& operator = ( ObjectOwner< Type >&& ) = delete;
+			ObjectOwner< Type >&
+			operator = ( const ObjectOwner< Type >& other )
+			{
+				this->object = other.object;
+
+				return *this;
+			}
+
+			ObjectOwner< Type >&
+			operator = ( ObjectOwner< Type >&& other )
+			{
+				this->object = std::move( other.object );
+
+				return *this;
+			}
 
 
 			Type&
