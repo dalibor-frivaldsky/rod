@@ -3,7 +3,7 @@
 
 #include <type_traits>
 
-#include "rod/AsSingleton.hpp"
+#include "rod/Singleton.hpp"
 
 
 
@@ -20,7 +20,7 @@ test()
 {
 	using context = rod::CreateInitialContext<
 							Type,
-							rod::AsSingleton< Component >
+							rod::Singleton< Component >
 					>::r;
 
 	auto	nullCtx = rod::createNullContext();

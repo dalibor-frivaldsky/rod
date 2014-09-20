@@ -3,7 +3,7 @@
 
 #include <cassert>
 
-#include "rod/AsSingleton.hpp"
+#include "rod/Singleton.hpp"
 
 
 
@@ -28,9 +28,9 @@ void
 test()
 {
 	using context = rod::CreateInitialContext<
-							rod::AsSingleton< Component >
+							rod::Singleton< Component >
 					>::r;
-	using broaderContext = context::CreateChildContext< rod::AsSingleton< DummyComponent > >::r;
+	using broaderContext = context::CreateChildContext< rod::Singleton< DummyComponent > >::r;
 
 	auto	nullCtx = rod::createNullContext();
 	context	ctx( nullCtx );

@@ -11,7 +11,7 @@ namespace rod
 {
 
 	template< typename Type_ >
-	struct AsSingleton
+	struct Singleton
 	{
 		using Component = annotation::Component;
 

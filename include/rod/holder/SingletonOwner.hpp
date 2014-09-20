@@ -29,9 +29,20 @@ namespace rod
 			{}
 
 			SingletonOwner( const SingletonOwner< Type >& ) = delete;
-			SingletonOwner( SingletonOwner< Type >&& ) = delete;
+
+			SingletonOwner( SingletonOwner< Type >&& other ):
+			  object( std::move( other.object ) )
+			{}
+
 			SingletonOwner< Type >& operator = ( const SingletonOwner< Type >& ) = delete;
-			SingletonOwner< Type >& operator = ( SingletonOwner< Type >&& ) = delete;
+
+			SingletonOwner< Type >&
+			operator = ( SingletonOwner< Type >&& other )
+			{
+				this->object = std::move( other.object );
+
+				return *this;
+			}
 
 
 			Type&

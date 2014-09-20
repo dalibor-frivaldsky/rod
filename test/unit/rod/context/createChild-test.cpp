@@ -3,7 +3,7 @@
 
 #include <type_traits>
 
-#include "rod/AsSingleton.hpp"
+#include "rod/Singleton.hpp"
 
 
 
@@ -22,14 +22,14 @@ test()
 							Type
 						>::r;
 	using child = initial::CreateChildContext<
-							rod::AsSingleton< Component >
+							rod::Singleton< Component >
 						>::r;
 
 	static_assert( std::is_same<
 						child,
 						rod::Context<
 							rod::CreateContextLevel<
-								rod::AsSingleton< Component >
+								rod::Singleton< Component >
 							>::r,
 							rod::CreateContextLevel<
 								Type

@@ -1,6 +1,6 @@
 #include <cassert>
 
-#include <rod/AsSingleton.hpp>
+#include <rod/Singleton.hpp>
 #include <rod/Container.hpp>
 
 
@@ -24,7 +24,7 @@ void
 test()
 {
 	using c = rod::CreateContainer<
-					rod::AsSingleton< C >
+					rod::Singleton< C >
 			  >::r;
 
 	c	cont( std::make_tuple( [] { return 10; }, [] { return 1.0f; } ) );

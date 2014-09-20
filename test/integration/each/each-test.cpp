@@ -1,6 +1,6 @@
 #include <cassert>
 
-#include "rod/AsSingleton.hpp"
+#include "rod/Singleton.hpp"
 #include "rod/Contextual.hpp"
 #include "rod/Each.hpp"
 #include "rod/Rod.hpp"
@@ -43,8 +43,8 @@ template< typename Context >
 class Domain:
   public rod::Contextual<
   				Context,
-  				rod::AsSingleton< Implementor1 >,
-  				rod::AsSingleton< Implementor2 > >
+  				rod::Singleton< Implementor1 >,
+  				rod::Singleton< Implementor2 > >
 {
 public:
 

@@ -1,4 +1,4 @@
-#include <rod/AsSingleton.hpp>
+#include <rod/Singleton.hpp>
 #include <rod/Container.hpp>
 
 
@@ -20,7 +20,7 @@ void
 test()
 {
 	using c = rod::CreateContainer<
-					rod::AsSingleton< C >
+					rod::Singleton< C >
 			  >::r;
 
 	A	a;

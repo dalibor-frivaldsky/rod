@@ -3,7 +3,7 @@
 
 #include <type_traits>
 
-#include "rod/AsSingleton.hpp"
+#include "rod/Singleton.hpp"
 #include "rod/TypeList.hpp"
 #include "rod/annotation/ConstructWith.hpp"
 
@@ -40,9 +40,9 @@ test()
 {
 	static_assert( std::is_same<
 						rod::CreateContainer<
-								rod::AsSingleton< D1 >,
-								rod::AsSingleton< D2 >,
-								rod::AsSingleton< D3 > >::r::GetDependencies::r,
+								rod::Singleton< D1 >,
+								rod::Singleton< D2 >,
+								rod::Singleton< D3 > >::r::GetDependencies::r,
 						rod::TypeList< C1, C3, D1, C2 >
 				   >::value,
 				   "Unexpected declared dependencies" );

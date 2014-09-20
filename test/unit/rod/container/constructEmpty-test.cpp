@@ -1,4 +1,4 @@
-#include <rod/AsSingleton.hpp>
+#include <rod/Singleton.hpp>
 #include <rod/Container.hpp>
 
 #include "Common.hpp"

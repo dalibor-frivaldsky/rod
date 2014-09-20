@@ -3,7 +3,7 @@
 
 #include <cassert>
 
-#include "rod/AsSingleton.hpp"
+#include "rod/Singleton.hpp"
 #include "rod/Contextual.hpp"
 #include "rod/With.hpp"
 
@@ -25,7 +25,7 @@ struct Component
 
 template< typename Context >
 class Domain:
-  public rod::Contextual< Context, rod::AsSingleton< Component > >
+  public rod::Contextual< Context, rod::Singleton< Component > >
 {
 public:
 

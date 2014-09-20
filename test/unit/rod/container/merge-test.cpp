@@ -1,7 +1,7 @@
 #include <cassert>
 #include <type_traits>
 
-#include <rod/AsSingleton.hpp>
+#include <rod/Singleton.hpp>
 #include <rod/Container.hpp>
 
 #include "Common.hpp"
@@ -13,11 +13,11 @@ void
 test()
 {
 	using c1 = rod::CreateContainer<
-					rod::AsSingleton< Component >
+					rod::Singleton< Component >
 			  >::r;
 
 	using c2 = rod::CreateContainer<
-					rod::AsSingleton< Component2 >
+					rod::Singleton< Component2 >
 			  >::r;
 
 	using merged = c1::Merge< c2 >::r;

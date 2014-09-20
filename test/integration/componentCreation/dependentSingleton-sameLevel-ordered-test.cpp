@@ -3,7 +3,7 @@
 
 #include <cassert>
 
-#include "rod/AsSingleton.hpp"
+#include "rod/Singleton.hpp"
 #include "rod/Contextual.hpp"
 #include "rod/annotation/ConstructWith.hpp"
 
@@ -45,8 +45,8 @@ struct DependentComponent
 template< typename Context >
 class Domain:
   public rod::Contextual< Context,
-  						  rod::AsSingleton< Component >,
-  						  rod::AsSingleton< DependentComponent > >
+  						  rod::Singleton< Component >,
+  						  rod::Singleton< DependentComponent > >
 {
 public:
 

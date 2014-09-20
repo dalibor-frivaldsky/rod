@@ -1,6 +1,6 @@
 #include <cassert>
 
-#include <rod/AsSingleton.hpp>
+#include <rod/Singleton.hpp>
 #include <rod/Container.hpp>
 
 
@@ -40,9 +40,9 @@ void
 test()
 {
 	using c = rod::CreateContainer<
-					rod::AsSingleton< ThirdToDestroy >,
-					rod::AsSingleton< SecondToDestroy >,
-					rod::AsSingleton< FirstToDestroy >
+					rod::Singleton< ThirdToDestroy >,
+					rod::Singleton< SecondToDestroy >,
+					rod::Singleton< FirstToDestroy >
 			  >::r;
 
 	c	cont(  std::make_tuple() );

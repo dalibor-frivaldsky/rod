@@ -3,7 +3,7 @@
 
 #include <type_traits>
 
-#include "rod/AsSingleton.hpp"
+#include "rod/Singleton.hpp"
 
 
 
