@@ -8,6 +8,7 @@
 #include <rod/Context.hpp>
 #include <rod/ContextAccessor.hpp>
 #include <rod/ContextOwner.hpp>
+#include <rod/CustomContextOwner.hpp>
 #include <rod/Injected.hpp>
 #include <rod/common/Sequence.hpp>
 
@@ -20,43 +21,98 @@ namespace rod
 	namespace extendDetail
 	{
 
-		template< typename Parent, typename NewTypes >
+		struct NoCustomContext
+		{};
+
+		template< template< typename > class CustomContext_ >
+		struct CustomContextProvider
+		{
+			template< typename T >
+			using CustomContext = CustomContext_< T >;
+		};
+
+
+		template< typename Parent, typename Types, typename CustomContext >
+		struct OwnerAssembler;
+
+		template< typename Parent, typename... Type >
+		struct OwnerAssembler< Parent, TypeList< Type... >, NoCustomContext >
+		{
+		private:
+			using ParentContext = typename ContextAccessor<
+									typename std::remove_reference< Parent >::type >::Context;
+
+
+		public:
+			using r = ContextOwner<
+						typename ParentContext::template CreateChildContext<
+							Type... >::r >;
+		};
+
+		template< typename Parent, typename... Type, typename CustomContext >
+		struct OwnerAssembler< Parent, TypeList< Type... >, CustomContext >
+		{
+		private:
+			using ParentContext = typename ContextAccessor<
+									typename std::remove_reference< Parent >::type >::Context;
+
+
+		public:
+			using r = CustomContextOwner<
+						typename ParentContext::template CreateChildContext<
+							Type... >::r,
+						CustomContext::template CustomContext >;
+		};
+
+
+		template< typename Parent, typename NewTypes, typename CustomContext >
 		struct ContextExtender;
 
 
 		template< typename Extender, typename... Type >
 		struct AddTypes;
 
-		template< typename Parent, typename NewTypes, typename... Type >
-		struct AddTypes< ContextExtender< Parent, NewTypes >, Type... >
+		template< typename Parent, typename NewTypes, typename CustomContext, typename... Type >
+		struct AddTypes< ContextExtender< Parent, NewTypes, CustomContext >, Type... >
 		{
 			using r = ContextExtender<
 							Parent,
-							typename NewTypes::template Append< Type... >::r >;
+							typename NewTypes::template Append< Type... >::r,
+							CustomContext >;
 		};
 
 
-		template< typename Parent, typename... NewType >
-		struct ContextExtender< Parent, TypeList< NewType... > >
+		template< typename Parent, typename... NewType, typename CustomContext >
+		struct ContextExtender< Parent, TypeList< NewType... >, CustomContext >
 		{
 		private:
-			using This = ContextExtender< Parent, TypeList< NewType... > >;
-
-			using ParentContext = typename ContextAccessor<
-									typename std::remove_reference< Parent >::type >::Context;
+			using This = ContextExtender<
+							Parent,
+							TypeList< NewType... >,
+							CustomContext >;
+			
 
 		public:
-			using r = ContextOwner< typename ParentContext::template CreateChildContext< NewType... >::r >;
+			using r = typename OwnerAssembler<
+						Parent,
+						TypeList< NewType... >,
+						CustomContext >::r;
 
 			template< typename... Type >
 			using With = typename AddTypes< This, Type... >::r;
+
+			template< template< typename > class CustomContext_ >
+			using As = ContextExtender<
+							Parent,
+							TypeList< NewType... >,
+							CustomContextProvider< CustomContext_ > >;
 		};
 		
 	}
 
 
 	template< typename Parent >
-	using Extend = extendDetail::ContextExtender< Parent, TypeList<> >;
+	using Extend = extendDetail::ContextExtender< Parent, TypeList<>, extendDetail::NoCustomContext >;
 
 
 
@@ -80,15 +136,17 @@ namespace rod
 		};
 
 
-		template< typename Parent, typename NewTypes, typename ToInjectTypes >
+		template< typename Parent, typename NewTypes, typename ToInjectTypes, typename CustomContext >
 		struct ContextBuilder;
 
-		template< typename Parent, typename... NewType, typename... ToInjectType >
-		struct ContextBuilder< Parent, TypeList< NewType... >, TypeList< ToInjectType... > >
+		template< typename Parent, typename... NewType, typename... ToInjectType, typename CustomContext >
+		struct ContextBuilder< Parent, TypeList< NewType... >, TypeList< ToInjectType... >, CustomContext >
 		{
 		private:
-			using BuiltOwner = typename Extend< Parent >
-									::template With< Injected< ToInjectType >..., NewType... >::r;
+			using BuiltOwner = typename OwnerAssembler<
+									Parent,
+									TypeList< Injected< ToInjectType >..., NewType... >,
+									CustomContext >::r;
 
 
 			Parent&							parent;
@@ -112,17 +170,36 @@ namespace rod
 			ContextBuilder<
 				Parent,
 				TypeList< NewType..., Type... >,
-				TypeList< ToInjectType..., ToInject... > >
+				TypeList< ToInjectType..., ToInject... >,
+				CustomContext >
 			with( ToInject&&... toInject )
 			{
 				return ContextBuilder<
 							Parent,
 							TypeList< NewType..., Type... >,
-							TypeList< ToInjectType..., ToInject... > >(
+							TypeList< ToInjectType..., ToInject... >,
+							CustomContext >(
 								parent,
 								std::tuple_cat(
 									toInjectTuple,
 									std::tuple< ToInject... >( std::forward< ToInject >( toInject )... ) ) );
+			}
+
+			template< template< typename > class CustomContext_ >
+			ContextBuilder<
+				Parent,
+				TypeList< NewType... >,
+				TypeList< ToInjectType... >,
+				extendDetail::CustomContextProvider< CustomContext_ > >
+			as()
+			{
+				return ContextBuilder<
+							Parent,
+							TypeList< NewType... >,
+							TypeList< ToInjectType... >,
+							extendDetail::CustomContextProvider< CustomContext_ > >(
+								parent,
+								std::move( toInjectTuple ) );
 			}
 		};
 		
@@ -130,13 +207,14 @@ namespace rod
 
 
 	template< typename Parent >
-	extendDetail::ContextBuilder< Parent, TypeList<>, TypeList<> >
+	extendDetail::ContextBuilder< Parent, TypeList<>, TypeList<>, extendDetail::NoCustomContext >
 	extend( Parent& parent )
 	{
 		return extendDetail::ContextBuilder<
 				Parent,
 				TypeList<>,
-				TypeList<> >(
+				TypeList<>,
+				extendDetail::NoCustomContext >(
 					parent,
 					std::tuple<>() );
 	}

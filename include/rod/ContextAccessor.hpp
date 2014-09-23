@@ -6,18 +6,18 @@
 namespace rod
 {
 
-	template< typename ContextOwner >
+	template< typename ContextOwner_ >
 	class ContextAccessor
 	{
 	private:
-		ContextOwner&	contextOwner;
+		ContextOwner_&	contextOwner;
 
 
 	public:
-		using Context = typename ContextOwner::GetContext::r;
+		using Context = typename ContextOwner_::GetContext::r;
 
 
-		ContextAccessor( ContextOwner& contextOwner ):
+		ContextAccessor( ContextOwner_& contextOwner ):
 		  contextOwner( contextOwner )
 		{}
 
@@ -29,12 +29,12 @@ namespace rod
 	};
 
 
-	template< typename ContextOwner >
+	template< typename ContextOwner_ >
 	auto
-	accessContext( ContextOwner& contextOwner )
-		-> decltype( ContextAccessor< ContextOwner >( contextOwner ).context() )
+	accessContext( ContextOwner_& contextOwner )
+		-> decltype( ContextAccessor< ContextOwner_ >( contextOwner ).context() )
 	{
-		return ContextAccessor< ContextOwner >( contextOwner ).context();
+		return ContextAccessor< ContextOwner_ >( contextOwner ).context();
 	}
 	
 }
