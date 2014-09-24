@@ -4,8 +4,10 @@
 #include <memory>
 
 #include <rod/ContextAccessor.hpp>
+#include <rod/Resolve.hpp>
 #include <rod/TypeList.hpp>
 #include <rod/annotation/ExtendWith.hpp>
+#include <rod/annotation/Requires.hpp>
 #include <rod/common/NullType.hpp>
 
 
@@ -74,6 +76,31 @@ namespace rod
 				using r = Context;
 			};
 		};
+
+
+		template< typename BoundCustomContext, typename Requirements >
+		struct CustomContextHolder;
+
+		template< typename BoundCustomContext, typename... Requirement >
+		struct CustomContextHolder< BoundCustomContext, TypeList< Requirement... > >:
+			public BoundCustomContext
+		{
+		private:
+			using This = CustomContextHolder< BoundCustomContext, TypeList< Requirement... > >;
+
+
+		public:
+			template< typename Context >
+			CustomContextHolder( Context& context ):
+			  BoundCustomContext( context, resolve< Requirement >( context ) ... )
+			{}
+
+			CustomContextHolder( const This& ) = delete;
+
+			CustomContextHolder( This&& other ):
+			  BoundCustomContext( static_cast< BoundCustomContext&& >( std::move( other ) ) )
+			{}
+		};
 		
 	}
 
@@ -83,9 +110,14 @@ namespace rod
 		private customContextOwnerDetail::ContextHolder<
 			typename customContextOwnerDetail::EnrichContext<
 				Context, CustomContext >::r >,
-		public CustomContext<
-			CustomContextOwner<
-				Context, CustomContext > >
+		public customContextOwnerDetail::CustomContextHolder<
+				CustomContext<
+					CustomContextOwner<
+						Context, CustomContext > >,
+				typename annotation::GetRequirements<
+					CustomContext<
+						CustomContextOwner<
+							Context, CustomContext > > >::r >
 	{
 	private:
 		using This = CustomContextOwner< Context, CustomContext >;
@@ -93,6 +125,10 @@ namespace rod
 								typename customContextOwnerDetail::EnrichContext<
 									Context, CustomContext >::r >;
 		using BoundCustomContext = CustomContext< This >;
+		using BoundCustomContextHolder = customContextOwnerDetail::CustomContextHolder<
+											BoundCustomContext,
+											typename annotation::GetRequirements<
+												BoundCustomContext >::r >;
 
 		friend class ContextAccessor< This >;
 
@@ -114,14 +150,14 @@ namespace rod
 		CustomContextOwner( Parent& parent,
 							ToInject&&... toInject ):
 		  ContextHolder( accessContext( parent ), std::forward< ToInject >( toInject )... ),
-		  BoundCustomContext( *this )
+		  BoundCustomContextHolder( *this )
 		{}
 
 		CustomContextOwner( const This& ) = delete;
 
 		CustomContextOwner( This&& other ):
 		  ContextHolder( static_cast< ContextHolder&& >( std::move( other ) ) ),
-		  BoundCustomContext( static_cast< BoundCustomContext&& >( std::move( other ) ) )
+		  BoundCustomContextHolder( static_cast< BoundCustomContextHolder&& >( std::move( other ) ) )
 		{}
 	};
 	

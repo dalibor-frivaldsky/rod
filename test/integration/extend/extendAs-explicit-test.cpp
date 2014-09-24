@@ -1,3 +1,4 @@
+#include <cassert>
 #include <type_traits>
 
 #include <rod/Extend.hpp>
@@ -6,6 +7,9 @@
 #include <rod/annotation/ExtendWith.hpp>
 
 
+
+
+bool constructed = false;
 
 
 struct Type
@@ -31,6 +35,8 @@ public:
 								rod::IsType< Type > >::r,
 							rod::TypeList< Type > >::value,
 					   "Type not found in context" );
+
+		constructed = true;
 	}
 };
 
@@ -51,4 +57,6 @@ test()
 						rod::TypeList< Type > >::value,
 					   "Type not found in context" );
 	});
+
+	assert( constructed );
 }
