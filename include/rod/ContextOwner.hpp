@@ -61,8 +61,8 @@ namespace rod
 
 
 	public:
-		template< typename... ToInject >
-		ContextOwner( ContextOwner< typename ContextAccessor< This >::Context::ParentContext >& parent,
+		template< typename Parent, typename... ToInject >
+		ContextOwner( Parent& parent,
 					  ToInject&&... toInject ):
 		  context( accessContext( parent ), std::forward< ToInject >( toInject )... )
 		{}
