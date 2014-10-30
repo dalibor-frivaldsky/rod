@@ -96,7 +96,7 @@ namespace rod
 		};
 
 
-		template< typename Context >
+		/*template< typename Context >
 		struct ContextValueHolder
 		{
 		private:
@@ -128,7 +128,7 @@ namespace rod
 			{
 				using r = Context;
 			};
-		};
+		};*/
 
 
 		template< typename Context, template< typename > class CustomContext >
@@ -145,7 +145,7 @@ namespace rod
 		public:
 			using r = typename std::conditional<
 						trait::IsContextMovable< BoundCustomContext, Requirements >::r,
-						ContextValueHolder< EnrichedContext >,
+						ContextPointerHolder< EnrichedContext >,
 						ContextPointerHolder< EnrichedContext > >::type;
 		};
 

@@ -24,7 +24,7 @@ namespace rod
 	struct Context;
 
 
-	namespace context
+	namespace detail
 	{
 
 		template< typename Ctx, typename... NewType >
@@ -301,95 +301,6 @@ namespace rod
 		};
 
 
-		template< typename Dep >
-		struct CreateLambda
-		{
-			template< typename Ctx >
-			static
-			auto
-			create( Ctx* ctx )
-				-> std::function< decltype( ctx->template resolve< Dep >() )() >
-			{
-				return [ctx] () -> decltype( ctx->template resolve< Dep >() ) { return ctx->template resolve< Dep >(); };
-			}
-		};
-
-
-		template< typename Deps >
-		struct GatherDeps;
-
-		template< typename... Dep >
-		struct GatherDeps< TypeList< Dep... > >
-		{
-		private:
-			template< typename ToInject >
-			struct CreateInjectLambda;
-			
-			template< typename ToInject >
-			struct CreateInjectLambda< ToInject& >
-			{
-				using injectedType = InjectedReference< typename std::decay< ToInject >::type >;
-				
-				static
-				std::function< injectedType() >
-				create( ToInject& toInject )
-				{
-					return [&toInject] () -> injectedType { return injectedType( toInject ); };
-				}
-			};
-
-			template< typename ToInject >
-			struct CreateInjectLambda< ToInject&& >
-			{
-				using injectedType = InjectedValue< typename std::decay< ToInject >::type >;
-				
-				static
-				std::function< injectedType() >
-				create( ToInject&& toInject )
-				{
-					return [&toInject] () -> injectedType { return injectedType( std::move( toInject ) ); };
-				}
-			};
-
-
-		public:
-			template< typename Ctx, typename... ToInject >
-			static
-			auto
-			gather( Ctx* ctx, ToInject&&... toInject )
-				-> decltype( std::make_tuple(
-									CreateLambda< Dep >::create( ctx )...,
-									CreateInjectLambda< ToInject&& >::create( std::forward< ToInject >( toInject ) )... ) )
-			{
-				return std::make_tuple(
-							CreateLambda< Dep >::create( ctx )...,
-							CreateInjectLambda< ToInject&& >::create( std::forward< ToInject >( toInject ) )... );
-			}
-		};
-
-
-		template< typename Dep >
-		struct IsInjected;
-
-		template< typename Type >
-		struct IsInjected< InjectedReference< Type > >
-		{
-			enum { r = true };
-		};
-
-		template< typename Type >
-		struct IsInjected< InjectedValue< Type > >
-		{
-			enum { r = true };
-		};
-
-		template< typename Dep >
-		struct IsInjected
-		{
-			enum { r = false };
-		};
-
-
 		template< typename Ctx, typename ToRetrieve >
 		struct CanRetrieve
 		{
@@ -462,7 +373,7 @@ namespace rod
 			resolve( Ctx* ctx )
 			{
 				return Resolver::template resolve< ToResolve >(
-						CreateLambda< Dep >::create( ctx )... );
+						ctx->template resolve< Dep >()... );
 			}
 
 		};
@@ -487,7 +398,7 @@ namespace rod
 
 	public:
 		template< typename... NewType >
-		using CreateChildContext = context::CreateChildContext< This, NewType... >;
+		using CreateChildContext = detail::CreateChildContext< This, NewType... >;
 
 
 		inline
@@ -536,61 +447,36 @@ namespace rod
 		using ParentContext = Context< ParentLevel... >;
 
 		template< typename... NewType >
-		using CreateChildContext = context::CreateChildContext< This, NewType... >;
+		using CreateChildContext = detail::CreateChildContext< This, NewType... >;
 
 		template< typename... NewType >
-		using Enrich = context::Enrich< This, NewType... >;
+		using Enrich = detail::Enrich< This, NewType... >;
 
-		using GetTypeRegistry = context::GetTypeRegistry< This >;
+		using GetTypeRegistry = detail::GetTypeRegistry< This >;
 
-		using GetComponents = context::GetComponents< This >;
+		using GetComponents = detail::GetComponents< This >;
 
 		template< typename Interface >
-		using FindImplementors = context::FindImplementors< This, Interface >;
+		using FindImplementors = detail::FindImplementors< This, Interface >;
 
 		template< typename Component >
-		using FindOwningContext = context::FindOwningContext< This, Component >;
+		using FindOwningContext = detail::FindOwningContext< This, Component >;
 
 		template< typename ToResolve >
-		using CanResolve = context::CanResolve< This, ToResolve >;
+		using CanResolve = detail::CanResolve< This, ToResolve >;
 
 
 		template< typename... ToInject >
 		Context( ParentContext& parentContext, ToInject&&... toInject ):
 		  parent( parentContext ),
-		  currentLevel( context::GatherDeps<
-		  					typename CurrentLevel::GetDependencies::r
-		  						::template RemoveBy< context::IsInjected >::r >
-		  							::gather( this, std::forward< ToInject >( toInject )... ) )
+		  currentLevel( *this, std::forward< ToInject >( toInject )... )
 		{}
 
-		Context( const This& other ):
-		  parent( other.parent ),
-		  currentLevel( other.currentLevel )
-		{}
+		Context( const This& ) = delete;
+		Context( This&& ) = delete;
 
-		Context( This&& other ):
-		  parent( other.parent ),
-		  currentLevel( std::move( other.currentLevel ) )
-		{}
-
-		This&
-		operator = ( const This& other )
-		{
-			this->parent = other.parent;
-			this->currentLevel = other.currentLevel;
-
-			return *this;
-		}
-
-		This&
-		operator = ( This&& other )
-		{
-			this->parent = other.parent;
-			this->currentLevel = std::move( other.currentLevel );
-
-			return *this;
-		}
+		This& operator = ( const This& ) = delete;
+		This& operator = ( This&& ) = delete;
 
 
 		CurrentLevel&
@@ -601,12 +487,12 @@ namespace rod
 
 		template< typename ToResolve >
 		typename std::enable_if<
-			context::CanRetrieve< This, ToResolve >::r,
+			detail::CanRetrieve< This, ToResolve >::r,
 			ToResolve >::type
 		resolve()
 		{
 			using decayed = typename std::decay< ToResolve >::type;
-			using implementor = typename context::FindImplementors< This, decayed >::r::Head::r;
+			using implementor = typename detail::FindImplementors< This, decayed >::r::Head::r;
 
 			return retrieve< implementor >();
 
@@ -615,7 +501,7 @@ namespace rod
 
 			if( interfacesConfig.isConfigured( toResolveName ) )
 			{
-				auto	configuredImplementors = context::FindConfiguredImplementors< ToResolve >::find( *this );
+				auto	configuredImplementors = detail::FindConfiguredImplementors< ToResolve >::find( *this );
 				auto	implementorIt = configuredImplementors.find(
 											interfacesConfig.getConfiguration( toResolveName ).providedById );
 
@@ -641,14 +527,14 @@ namespace rod
 
 		template< typename ToResolve >
 		typename std::enable_if<
-			context::HasResolver< This, ToResolve >::r,
+			detail::HasResolver< This, ToResolve >::r,
 			ToResolve >::type
 		resolve()
 		{
-			using resolver = typename context::GetResolver< This, ToResolve >::r;
+			using resolver = typename detail::GetResolver< This, ToResolve >::r;
 			using deps = typename resolver::template GetDependencies< ToResolve >::r;
 
-			return context::ResolverResolve< resolver, ToResolve, deps >::resolve( this );
+			return detail::ResolverResolve< resolver, ToResolve, deps >::resolve( this );
 		}
 
 

@@ -17,32 +17,25 @@ namespace rod
 		template< typename Type >
 		struct SingletonOwner
 		{
-
+		public:
 			using Dependencies = typename annotation::GetConstructionArguments< Type >::r;
 
 
-			Type	object;
+		private:
+			Type		object;
 
-			template< typename... Arg >
-			SingletonOwner( Arg&... arg ):
-			  object( arg()... )
+
+		public:
+			template< typename... Dependency >
+			SingletonOwner( Dependency&&... dependency ):
+			  object( std::forward< Dependency >( dependency )... )
 			{}
 
 			SingletonOwner( const SingletonOwner< Type >& ) = delete;
-
-			SingletonOwner( SingletonOwner< Type >&& other ):
-			  object( std::move( other.object ) )
-			{}
+			SingletonOwner( SingletonOwner< Type >&& ) = delete;
 
 			SingletonOwner< Type >& operator = ( const SingletonOwner< Type >& ) = delete;
-
-			SingletonOwner< Type >&
-			operator = ( SingletonOwner< Type >&& other )
-			{
-				this->object = std::move( other.object );
-
-				return *this;
-			}
+			SingletonOwner< Type >& operator = ( SingletonOwner< Type >&&  ) = delete;
 
 
 			Type&

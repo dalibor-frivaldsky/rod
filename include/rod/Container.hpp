@@ -7,11 +7,14 @@
 #include <utility>
 
 #include <rod/Reduce.hpp>
+#include <rod/Resolve.hpp>
 #include <rod/TypeList.hpp>
 #include <rod/common/NullType.hpp>
 #include <rod/common/Sequence.hpp>
 #include <rod/common/Select.hpp>
 #include <rod/common/SuperSubClass.hpp>
+#include <rod/holder/InjectedReference.hpp>
+#include <rod/holder/InjectedValue.hpp>
 
 
 
@@ -23,7 +26,7 @@ namespace rod
 	struct Container;
 
 
-	namespace container
+	namespace detail
 	{
 
 		template< typename Type_, typename Holder_ >
@@ -31,61 +34,6 @@ namespace rod
 		{
 			using Type = Type_;
 			using Holder = Holder_;
-		};
-
-
-		template< typename... Holder >
-		struct HolderBase;
-
-		template<>
-		struct HolderBase<>
-		{};
-
-		template< typename Holder >
-		struct HolderConstructor:
-			public Holder
-		{
-		private:
-			using This = HolderConstructor< Holder >;
-
-
-		public:
-			template< typename... Arg, int... Seq >
-			HolderConstructor( std::tuple< Arg... >& argTuple,
-							   common::Sequence< Seq... >&& ):
-			  Holder( std::get< Seq >( argTuple )... )
-			{}
-
-			HolderConstructor( const This& other ):
-			  Holder( other )
-			{}
-
-			HolderConstructor( This&& other ):
-			  Holder( std::move( other ) )
-			{}
-		};
-
-		template< typename... Holder >
-		struct HolderBase:
-		  public HolderConstructor< Holder >...
-		{
-		private:
-			using This = HolderBase< Holder... >;
-
-
-		public:
-			template< typename... ArgTuple >
-			HolderBase( ArgTuple&&... argTuple ):
-			  HolderConstructor< Holder >( argTuple, typename common::GenerateSequence< std::tuple_size< ArgTuple >::value >::r() )...
-			{}
-
-			HolderBase( const This& other ):
-			  HolderConstructor< Holder >( other )...
-			{}
-
-			HolderBase( This&& other ):
-			  HolderConstructor< Holder >( std::move( other ) )...
-			{}
 		};
 
 
@@ -100,6 +48,72 @@ namespace rod
 		struct ExtractHolder
 		{
 			using r = typename ComponentHolder::Holder;
+		};
+
+
+		template< typename Holder, typename Dependencies >
+		struct HolderConstructor;
+
+		template< typename Holder >
+		struct HolderConstructor< Holder, TypeList<> >:
+			public Holder
+		{
+			template< typename Context, typename ToInjectTuple >
+			HolderConstructor( Context&, ToInjectTuple& ):
+			  Holder()
+			{}
+		};
+
+		template< typename Holder, typename Type >
+		struct HolderConstructor<
+			Holder,
+			TypeList< holder::InjectedReference< Type > > >:
+			public Holder
+		{
+			template< typename Context, typename... ToInject >
+			HolderConstructor( Context&, std::tuple< ToInject... >& toInjectTuple ):
+			  Holder(
+			  	std::get<
+		  			TypeList< ToInject... >::template IndexOf< Type& >::r >( toInjectTuple ) )
+			{}
+		};
+
+		template< typename Holder, typename Type >
+		struct HolderConstructor<
+			Holder,
+			TypeList< holder::InjectedValue< Type > > >:
+			public Holder
+		{
+			template< typename Context, typename... ToInject >
+			HolderConstructor( Context&, std::tuple< ToInject... >& toInjectTuple ):
+			  Holder(
+			  	std::move(
+			  		std::get<
+		  				TypeList< ToInject... >::template IndexOf< Type&& >::r >( toInjectTuple ) ) )
+			{}
+		};
+
+		template< typename Holder, typename... Dependency >
+		struct HolderConstructor< Holder, TypeList< Dependency... > >:
+			public Holder
+		{
+			template< typename Context, typename ToInjectTuple >
+			HolderConstructor( Context& context, ToInjectTuple& ):
+			  Holder( resolve< Dependency >( context )... )
+			{}
+		};
+
+
+		template< typename ComponentHolder >
+		struct DefineHolderConstructor
+		{
+		private:
+			using Holder = typename ExtractHolder< ComponentHolder >::r;
+
+		public:
+			using r = HolderConstructor<
+						Holder,
+						typename Holder::Dependencies >;
 		};
 
 
@@ -234,108 +248,23 @@ namespace rod
 			using r = typename Reduce< AppendImplementors, TypeList<>, Interface... >::r;
 		};
 
-
-		template< typename Container >
-		struct GetDependencies;
-
-		template< typename... ComponentHolder >
-		struct GetDependencies< Container< ComponentHolder... > >
-		{
-		private:
-			template< typename Next, typename Result >
-			struct MergeDependencies
-			{
-				using r = typename Result::template AppendAll< Next >::r;
-			};
-
-			using merged = typename Reduce<
-										MergeDependencies,
-										TypeList<>,
-										typename ExtractHolder< ComponentHolder >::r::Dependencies... >::r;
-
-		public:
-			using r = typename merged::RemoveDuplicates::r;
-		};
-
-
-		template< typename ComponentHolder >
-		struct ExtractDeps
-		{
-		private:
-			using deps = typename ComponentHolder::Holder::Dependencies;
-			
-
-			template< typename Dependencies, typename Args >
-			struct GetSequence;
-
-			template< typename... Dep, typename Args >
-			struct GetSequence< TypeList< Dep... >, Args >
-			{
-			private:
-				template< typename Next, typename Result >
-				struct AppendArgIndex
-				{
-					using r = typename Result::template Append<
-								Args::template IndexOf< Next >::r >::r;
-				};
-
-			public:
-				using r = typename Reduce<
-									AppendArgIndex,
-									common::Sequence<>,
-									Dep... >::r;
-			};
-
-
-			template< typename ArgTuple, int... Seq >
-			static
-			auto
-			createTuple( ArgTuple& argTuple, common::Sequence< Seq... >&& )
-				-> std::tuple< decltype( std::get< Seq >( argTuple ) )... >
-			{
-				using depsTuple = std::tuple< decltype( std::get< Seq >( argTuple ) )... >;
-
-				return depsTuple( std::get< Seq >( argTuple )... );
-			}
-
-
-		public:
-			template< typename... Arg, int... Seq >
-			static
-			auto
-			extract( std::tuple< Arg... >& argTuple, common::Sequence< Seq... >&& )
-				-> decltype( createTuple(
-								argTuple,
-								typename GetSequence<
-											deps,
-											TypeList< decltype( std::get< Seq >( argTuple )() )... >
-										 >::r() ) )
-			{
-				using argTypes = TypeList< decltype( std::get< Seq >( argTuple )() )... >;
-				using seq = typename GetSequence< deps, argTypes >::r;
-
-				return createTuple( argTuple, seq() );
-			}
-		};
-
 	}
 
 
 	template< typename... ComponentDefinition >
 	struct CreateContainer
 	{
-		using r = typename container::GenerateContainer< ComponentDefinition... >::r;
+		using r = typename detail::GenerateContainer< ComponentDefinition... >::r;
 	};
 
 
 	template< typename... ComponentHolder >
 	struct Container:
-		public container::HolderBase< typename container::ExtractHolder< ComponentHolder >::r... >
+		public detail::DefineHolderConstructor< ComponentHolder >::r...
 	{
 	private:
 
 		using This = Container< ComponentHolder... >;
-		using HolderBase = container::HolderBase< typename container::ExtractHolder< ComponentHolder >::r... >;
 
 
 	public:
@@ -344,64 +273,53 @@ namespace rod
 		// when the ComponentHolder parameter pack is of size zero
 		// workaround is to create two different constructors
 		// and choose one based on the ComponentHolder pack size
-		template< typename ArgTuple, typename Holders = TypeList< ComponentHolder... > >
-		Container( ArgTuple&& argTuple, typename std::enable_if< (Holders::Length::r > 0), void >::type* hasHolders = 0 ):
-		  HolderBase( container::ExtractDeps< ComponentHolder >::extract(
-							argTuple,
-							typename common::GenerateSequence< std::tuple_size< ArgTuple >::value >::r() )... )
+		template<
+			typename Context,
+			typename ToInjectTuple,
+			typename Holders = TypeList< ComponentHolder... > >
+		Container(
+			Context& context,
+			ToInjectTuple&& toInjectTuple,
+			typename std::enable_if< (Holders::Length::r > 0), void >::type* hasHolders = 0 ):
+		  detail::DefineHolderConstructor< ComponentHolder >::r( context, toInjectTuple )...
 		{}
 
-		template< typename ArgTuple, typename Holders = TypeList< ComponentHolder... > >
-		Container( ArgTuple&&, typename std::enable_if< (Holders::Length::r == 0), void >::type* hasHolders = 0 ):
-		  HolderBase()
+		template<
+			typename Context,
+			typename ToInjectTuple,
+			typename Holders = TypeList< ComponentHolder... > >
+		Container(
+			Context&,
+			ToInjectTuple&&,
+			typename std::enable_if< (Holders::Length::r == 0), void >::type* hasHolders = 0 )
 		{}
 
-		Container( const This& other ):
-		  HolderBase( static_cast< const HolderBase& >( other ) )
-		{}
+		Container( const This& ) = delete;
+		Container( This&& ) = delete;
 
-		Container( This&& other ):
-		  HolderBase( static_cast< HolderBase&& >( std::move( other ) ) )
-		{}
-
-		This&
-		operator = ( const This& other )
-		{
-			static_cast< HolderBase >( *this ) = other;
-
-			return *this;
-		}
-
-		This&
-		operator = ( This&& other )
-		{
-			static_cast< HolderBase >( *this ) = std::move( other );
-
-			return *this;
-		}
+		This& operator = ( const This& ) = delete;
+		This& operator = ( This&& ) = delete;
 
 
 		template< typename Type >
-		using Access = container::AccessComponentHolder< This, Type >;
+		using Access = detail::AccessComponentHolder< This, Type >;
 
 		template< typename ContainerToMerge >
-		using Merge = container::Merge< This, ContainerToMerge >;
+		using Merge = detail::Merge< This, ContainerToMerge >;
 		
-		using ContainedTypes = container::ContainedTypes< This >;
+		using ContainedTypes = detail::ContainedTypes< This >;
 		
 		template< template< typename > class Selector >
-		using Select = container::Select< This, Selector >;
+		using Select = detail::Select< This, Selector >;
 
 		template< typename Component >
 		using Contains = typename ContainedTypes::r::template Contains< Component >;
 
 		template< typename Interface >
-		using FindImplementors = container::FindImplementors< This, Interface >;
+		using FindImplementors = detail::FindImplementors< This, Interface >;
 
 		template< typename Interfaces >
-		using FindImplementorsForAll = container::FindImplementorsForAll< This, Interfaces >;
-
-		using GetDependencies = container::GetDependencies< This >;
+		using FindImplementorsForAll = detail::FindImplementorsForAll< This, Interfaces >;
 
 
 		template< typename Type >

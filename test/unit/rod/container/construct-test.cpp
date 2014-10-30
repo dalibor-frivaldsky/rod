@@ -2,6 +2,7 @@
 #include <rod/Container.hpp>
 
 #include "Common.hpp"
+#include "../../MockContext.hpp"
 
 
 
@@ -14,5 +15,6 @@ test()
 					rod::Singleton< Component2 >
 			  >::r;
 
-	c	cont( std::make_tuple() );
+	auto	mock = mockContext();
+	c	cont( mock, std::make_tuple() );
 }

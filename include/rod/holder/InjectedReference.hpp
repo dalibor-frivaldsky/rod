@@ -6,14 +6,13 @@
 namespace rod
 {
 
-	template< typename Type >
-	struct InjectedReference
+	namespace holder
 	{
-		Type&	object;
 
-		InjectedReference( Type& object ):
-		  object( object )
-		{}
-	};
+		template< typename Type >
+		struct InjectedReference
+		{};
+		
+	}
 	
 }

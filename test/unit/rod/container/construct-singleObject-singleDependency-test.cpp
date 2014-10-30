@@ -1,6 +1,8 @@
 #include <rod/Singleton.hpp>
 #include <rod/Container.hpp>
 
+#include "../../MockContext.hpp"
+
 
 
 
@@ -24,5 +26,6 @@ test()
 			  >::r;
 
 	A	a;
-	c	cont( std::make_tuple( [&a] () -> A& { return a; } ) );
+	auto	mock = mockContext( a );
+	c	cont( mock, std::make_tuple() );
 }

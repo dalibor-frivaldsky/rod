@@ -1,10 +1,10 @@
+#include <type_traits>
+
 #include <rod/Singleton.hpp>
 #include <rod/Container.hpp>
 #include <rod/TypeList.hpp>
 
 #include "Common.hpp"
-
-#include <type_traits>
 
 
 

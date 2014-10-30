@@ -25,11 +25,11 @@ test()
 	static_assert( std::is_same<
 							merged,
 							rod::Container<
-								rod::container::ComponentHolder<
+								rod::detail::ComponentHolder<
 									Component,
 									rod::holder::SingletonOwner< Component >
 								>,
-								rod::container::ComponentHolder<
+								rod::detail::ComponentHolder<
 									Component2,
 									rod::holder::SingletonOwner< Component2 >
 								>

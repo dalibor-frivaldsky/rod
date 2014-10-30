@@ -2,6 +2,7 @@
 #include <rod/Container.hpp>
 
 #include "Common.hpp"
+#include "../../MockContext.hpp"
 
 
 
@@ -11,5 +12,6 @@ test()
 {
 	using c = rod::CreateContainer<>::r;
 
-	c	cont(  std::make_tuple() );
+	auto	mock = mockContext();
+	c	cont( mock, std::make_tuple() );
 }

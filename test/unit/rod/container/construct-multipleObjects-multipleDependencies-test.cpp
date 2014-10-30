@@ -3,6 +3,8 @@
 #include <rod/Singleton.hpp>
 #include <rod/Container.hpp>
 
+#include "../../MockContext.hpp"
+
 
 
 
@@ -37,5 +39,7 @@ test()
 					rod::Singleton< C2 >
 			  >::r;
 
-	c	cont( std::forward_as_tuple( [] { return 2.0; }, [] { return 10; }, [] { return 1.0f; } ) );
+
+	auto	mock = mockContext( 2.0, 10, 1.0f );
+	c	cont( mock, std::make_tuple() );
 }

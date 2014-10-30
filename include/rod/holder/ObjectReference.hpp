@@ -28,8 +28,8 @@ namespace rod
 			using Dependencies = TypeList< InjectedReference< Type > >;
 
 			
-			ObjectReference( std::function< InjectedReference< Type >() >& ref ):
-			  object( ref().object )
+			ObjectReference( Type& ref ):
+			  object( ref )
 			{}
 
 			ObjectReference( const ObjectReference< Type >& other ):

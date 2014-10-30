@@ -3,6 +3,8 @@
 #include <rod/Singleton.hpp>
 #include <rod/Container.hpp>
 
+#include "../../MockContext.hpp"
+
 
 
 
@@ -45,5 +47,6 @@ test()
 					rod::Singleton< FirstToDestroy >
 			  >::r;
 
-	c	cont(  std::make_tuple() );
+	auto	mock = mockContext();
+	c	cont( mock, std::make_tuple() );
 }

@@ -9,14 +9,13 @@
 namespace rod
 {
 
-	template< typename Type >
-	struct InjectedValue
+	namespace holder
 	{
-		Type&&	object;
 
-		InjectedValue( Type&& object ):
-		  object( std::move( object ) )
-		{}
-	};
+		template< typename Type >
+		struct InjectedValue
+		{};
+		
+	}
 	
 }

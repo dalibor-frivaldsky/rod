@@ -1,6 +1,7 @@
 #pragma once
 
 
+#include <memory>
 #include <utility>
 
 #include <rod/Context.hpp>
@@ -46,12 +47,12 @@ namespace rod
 		friend class ContextAccessor< This >;
 
 
-		Context		context;
+		std::unique_ptr< Context >		context;
 
 		Context&
 		getContext()
 		{
-			return context;
+			return *context;
 		}
 
 		struct GetContext
@@ -64,7 +65,7 @@ namespace rod
 		template< typename Parent, typename... ToInject >
 		ContextOwner( Parent& parent,
 					  ToInject&&... toInject ):
-		  context( accessContext( parent ), std::forward< ToInject >( toInject )... )
+		  context( new Context( accessContext( parent ), std::forward< ToInject >( toInject )... ) )
 		{}
 
 		ContextOwner( const This& other ):

@@ -1,6 +1,7 @@
 #pragma once
 
 
+#include <tuple>
 #include <type_traits>
 #include <utility>
 
@@ -23,32 +24,32 @@ namespace rod
 	struct CreateContextLevel;
 
 
-	namespace contextLevel
+	namespace detail
 	{
 		template< typename Type, typename IsComponent = void >
-		struct ExtractType;
+		struct TypeFromComponent;
 		
 		template< typename Component >
-		struct ExtractType< Component, typename std::enable_if< annotation::IsComponent< Component >::r >::type >
+		struct TypeFromComponent< Component, typename std::enable_if< annotation::IsComponent< Component >::r >::type >
 		{
 			using r = typename Component::Type;
 		} ;
 
 		template< typename Type >
-		struct ExtractType< Type, typename std::enable_if< !annotation::IsComponent< Type >::r >::type >
+		struct TypeFromComponent< Type, typename std::enable_if< !annotation::IsComponent< Type >::r >::type >
 		{
 			using r = Type;
 		};
 		
 
 		template< typename... T >
-		struct ExtractTypes
+		struct TypeFromComponents
 		{
 		private:
 			template< typename Type >
 			struct Extract
 			{
-				using r = typename ExtractType< Type >::r;
+				using r = typename TypeFromComponent< Type >::r;
 			};
 
 		public:
@@ -83,9 +84,9 @@ namespace rod
 	struct CreateContextLevel
 	{
 		using r = ContextLevel<
-					typename contextLevel::ExtractTypes< Type... >::r
+					typename detail::TypeFromComponents< Type... >::r
 						::template UnpackTo< CreateTypeRegistry >::r::r,
-					typename contextLevel::SelectComponents< Type... >::r
+					typename detail::SelectComponents< Type... >::r
 						::template UnpackTo< CreateContainer >::r::r
 				  >;
 	};
@@ -107,40 +108,20 @@ namespace rod
 		using Container = Container_;
 
 
-		template< typename ArgTuple >
-		ContextLevel( ArgTuple&& argTuple ):
-		  container( std::forward< ArgTuple >( argTuple ) )
+		template< typename Context, typename... ToInject >
+		ContextLevel( Context& context, ToInject&&... toInject ):
+		  container( context, std::forward_as_tuple( std::forward< ToInject >( toInject )... ) )
 		{}
 
-		ContextLevel( const This& other ):
-		  container( other.container )
-		{}
+		ContextLevel( const This& ) = delete;
+		ContextLevel( This&& ) = delete;
 
-		ContextLevel( This&& other ):
-		  container( std::move( other.container ) )
-		{}
-
-		This&
-		operator = ( const This& other )
-		{
-			this->container = other.container;
-
-			return *this;
-		}
-
-		This&
-		operator = ( This&& other )
-		{
-			this->container = std::move( other.container );
-
-			return *this;
-		}
+		This& operator = ( const This& ) = delete;
+		This& operator = ( This&& ) = delete;
 
 
 		template< typename... NewType >
-		using Enrich = contextLevel::Enrich< This, NewType... >;
-
-		using GetDependencies = typename Container::GetDependencies;
+		using Enrich = detail::Enrich< This, NewType... >;
 
 		Container_&
 		getContainer()
