@@ -11,7 +11,7 @@ struct A
 
 struct C
 {
-	using ConstructWith = rod::annotation::ConstructWith< A& >;
+	using Requires = rod::annotation::Requires< A& >;
 
 	C( A& )
 	{}

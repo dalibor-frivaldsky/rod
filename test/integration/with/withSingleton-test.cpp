@@ -1,10 +1,8 @@
-#include "rod/Rod.hpp"
-
-
 #include <cassert>
 
-#include "rod/Singleton.hpp"
-#include "rod/Contextual.hpp"
+#include <rod/Extend.hpp>
+#include <rod/Rod.hpp>
+#include <rod/Singleton.hpp>
 #include "rod/With.hpp"
 
 
@@ -23,30 +21,20 @@ struct Component
 };
 
 
-template< typename Context >
-class Domain:
-  public rod::Contextual< Context, rod::Singleton< Component > >
+void
+test()
 {
-public:
-
-	ROD_Contextual_Constructor( Domain )
-
-	void
-	enter()
+	rod::enter(
+	[] ( rod::Root& root )
 	{
-		rod::with( this,
+		auto withComponent = rod::extend( root ).with< rod::Singleton< Component > >()();
+
+		rod::with( withComponent,
 		[] ( Component& component )
 		{
 			component.method();
 		});
-	}
-};
-
-
-void
-test()
-{
-	rod::enterPlain< Domain >();
+	});
 
 	assert( called );
 }

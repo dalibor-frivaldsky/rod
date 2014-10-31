@@ -9,8 +9,20 @@ namespace rod
 	namespace debug
 	{
 
-		template< typename... T >
-		struct Inspect;
+		namespace detail
+		{
+
+			template< typename T >
+			struct Print
+			{};
+			
+		}
+
+		template< typename T >
+		struct Inspect
+		{
+			using r = typename detail::Print< T >::inspect;
+		};
 		
 	}
 	

@@ -4,8 +4,11 @@
 #include <functional>
 #include <type_traits>
 
-#include <rod/ContextualAccessor.hpp>
+#include <rod/ContextAccessor.hpp>
+#include <rod/Find.hpp>
 #include <rod/Generate.hpp>
+#include <rod/TypeList.hpp>
+#include <rod/match/Interface.hpp>
 
 
 
@@ -13,70 +16,50 @@
 namespace rod
 {
 
-	template< typename Interface, typename Contextual >
-	class Each:
-		private ContextualAccessor< Contextual >
+	namespace detail
 	{
-	private:
-		using Base = ContextualAccessor< Contextual >;
-		using Closure = std::function< void( Interface& ) >;
 
+		template< typename Implementers >
+		struct Perform;
 
-		template< typename T >
-		struct HasInterface
+		// MSVC2013 has issues with zero implementers
+		template<>
+		struct Perform< TypeList<> >
 		{
-			enum { r = std::is_base_of< Interface, T >::value };
-		};
-
-
-		template< typename Implementors >
-		struct UnpackPerform;
-
-		template< typename... Implementor >
-		struct UnpackPerform< TypeList< Implementor... > >
-		{
-			template< typename Context >
+			template< typename Context, typename Closure >
 			static
 			void
-			perform( Context& ctx, Closure& closure )
+			perform( Context&, Closure&& )
+			{}
+		};
+
+		template< typename... Implementer >
+		struct Perform< TypeList< Implementer... > >
+		{
+			template< typename Context, typename Closure >
+			static
+			void
+			perform( Context& context, Closure&& closure )
 			{
 				rod::generate
 				{
-					(closure( ctx.template resolve< Implementor& >() ), 0)...
+					(closure( accessContext( context ).template resolve< Implementer& >() ), 0)...
 				};
 			}
 		};
-
-
-	public:
-		Each( Contextual* contextual ):
-		  Base( contextual )
-		{}
-
-
-		void
-		perform( Closure& closure )
-		{
-			using	context = typename Base::Context;
-			using	implementors = typename context::template FindImplementors< Interface >::r;
-
-			UnpackPerform< implementors >::perform( this->context(), closure );
-		}
-	};
-
-
-	template< typename Interface, typename Contextual >
-	void
-	each( Contextual* contextual, std::function< void( Interface& ) >&& closure )
-	{
-		Each< Interface, Contextual >( contextual ).perform( closure );
+		
 	}
 
-	template< typename Interface, typename Contextual >
+
+	template< typename Interface, typename Context, typename Closure >
 	void
-	each( Contextual* contextual, std::function< void( Interface& ) >& closure )
+	each( Context& context, Closure&& closure )
 	{
-		Each< Interface, Contextual >( contextual ).perform( closure );
+		using Implementers = typename Find<
+								Context,
+								match::Interface< Interface > >::r;
+
+		detail::Perform< Implementers >::perform( context, closure );
 	}
 	
 }

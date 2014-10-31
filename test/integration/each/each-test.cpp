@@ -1,9 +1,9 @@
 #include <cassert>
 
-#include "rod/Singleton.hpp"
-#include "rod/Contextual.hpp"
-#include "rod/Each.hpp"
-#include "rod/Rod.hpp"
+#include <rod/Each.hpp>
+#include <rod/Extend.hpp>
+#include <rod/Rod.hpp>
+#include <rod/Singleton.hpp>
 
 
 
@@ -39,32 +39,23 @@ struct Implementor2:
 };
 
 
-template< typename Context >
-class Domain:
-  public rod::Contextual<
-  				Context,
-  				rod::Singleton< Implementor1 >,
-  				rod::Singleton< Implementor2 > >
-{
-public:
-
-	ROD_Contextual_Constructor( Domain )
-
-	void
-	enter()
-	{
-		rod::each< Interface >( this, [] ( Interface& i )
-		{
-			i.method();
-		});
-	}
-};
-
-
 void
 test()
 {
-	rod::enterPlain< Domain >();
+	rod::enter(
+	[] ( rod::Root& root )
+	{
+		auto	extended = rod::extend( root )
+								.with<
+									rod::Singleton< Implementor1 >,
+									rod::Singleton< Implementor2 > >()();
+
+		rod::each< Interface >( extended,
+		[] ( Interface& i )
+		{
+			i.method();
+		});
+	});
 
 	assert( value == 3 );
 }

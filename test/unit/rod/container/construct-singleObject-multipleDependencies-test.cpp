@@ -13,7 +13,7 @@ bool called = false;
 
 struct C
 {
-	using ConstructWith = rod::annotation::ConstructWith< int, float >;
+	using Requires = rod::annotation::Requires< int, float >;
 
 	C( int, float )
 	{

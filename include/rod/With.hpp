@@ -4,7 +4,7 @@
 #include <functional>
 #include <utility>
 
-#include <rod/ContextualAccessor.hpp>
+#include <rod/ContextAccessor.hpp>
 
 
 
@@ -21,24 +21,22 @@ namespace rod
 		template< typename Class, typename Return, typename... Dep >
 		struct WithDeducedDeps< Return (Class::*)( Dep... ) const >
 		{
-			template< typename Entry, typename Lambda >
+			template< typename Context, typename Closure >
 			static
 			void
-			perform( Entry* entry, Lambda&& lambda )
+			perform( Context& context, Closure&& closure )
 			{
-				ContextualAccessor< Entry >	accessor( entry );
-
-				lambda( accessor.context().template resolve< Dep >()... );
+				closure( accessContext( context ).template resolve< Dep >()... );
 			}
 		};
 		
 	}
 
-	template< typename Entry, typename Lambda >
+	template< typename Context, typename Closure >
 	void
-	with( Entry* entry, Lambda&& lambda )
+	with( Context& context, Closure&& closure )
 	{
-		impl::WithDeducedDeps< decltype( &Lambda::operator() ) >::perform( entry, std::forward< Lambda >( lambda ) );
+		impl::WithDeducedDeps< decltype( &Closure::operator() ) >::perform( context, std::forward< Closure >( closure ) );
 	}
 	
 }

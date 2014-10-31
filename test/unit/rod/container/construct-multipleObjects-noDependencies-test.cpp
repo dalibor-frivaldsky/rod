@@ -13,7 +13,7 @@ int called = 0;
 
 struct C1
 {
-	using ConstructWith = rod::annotation::ConstructWith<>;
+	using Requires = rod::annotation::Requires<>;
 
 	C1()
 	{
@@ -23,7 +23,7 @@ struct C1
 
 struct C2
 {
-	using ConstructWith = rod::annotation::ConstructWith<>;
+	using Requires = rod::annotation::Requires<>;
 
 	C2()
 	{

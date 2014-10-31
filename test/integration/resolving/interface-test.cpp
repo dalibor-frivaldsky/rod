@@ -1,10 +1,8 @@
-#include "rod/Rod.hpp"
-
-
 #include <cassert>
 
-#include "rod/Singleton.hpp"
-#include "rod/Contextual.hpp"
+#include <rod/Extend.hpp>
+#include <rod/Rod.hpp>
+#include <rod/Singleton.hpp>
 
 
 
@@ -32,30 +30,15 @@ public:
 };
 
 
-template< typename Context >
-class Domain:
-  public rod::Contextual< Context, rod::Singleton< Component > >
-{
-private:
-
-	Interface&	interface = ROD_Resolve( Interface& );
-
-public:
-
-	ROD_Contextual_Constructor( Domain )
-
-	void
-	enter()
-	{
-		interface.method();
-	}
-};
-
-
 void
 test()
 {
-	rod::enterPlain< Domain >();
+	rod::enter(
+	[] ( rod::Root& root )
+	{
+		auto withComponent = rod::extend( root ).with< rod::Singleton< Component > >()();
+		rod::resolve< Interface& >( withComponent ).method();
+	});
 
 	assert( called );
 }

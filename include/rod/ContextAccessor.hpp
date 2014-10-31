@@ -36,5 +36,11 @@ namespace rod
 	{
 		return ContextAccessor< ContextOwner_ >( contextOwner ).context();
 	}
+
+	template< typename ContextOwner_ >
+	struct AccessContext
+	{
+		using r = typename ContextAccessor< ContextOwner_ >::Context;
+	};
 	
 }

@@ -3,7 +3,7 @@
 
 #include <utility>
 
-#include <rod/annotation/ConstructWith.hpp>
+#include <rod/annotation/Requires.hpp>
 
 
 
@@ -18,7 +18,7 @@ namespace rod
 		struct SingletonOwner
 		{
 		public:
-			using Dependencies = typename annotation::GetConstructionArguments< Type >::r;
+			using Dependencies = typename annotation::GetRequirements< Type >::r;
 
 
 		private:

@@ -1,11 +1,9 @@
-#include "rod/Rod.hpp"
-
-
 #include <cassert>
 
-#include "rod/Singleton.hpp"
-#include "rod/Contextual.hpp"
-#include "rod/annotation/ConstructWith.hpp"
+#include <rod/Extend.hpp>
+#include <rod/Rod.hpp>
+#include <rod/Singleton.hpp>
+#include <rod/annotation/Requires.hpp>
 
 
 
@@ -24,7 +22,7 @@ struct Component
 
 struct DependentComponent
 {
-	using ConstructWith = rod::annotation::ConstructWith< Component& >;
+	using Requires = rod::annotation::Requires< Component& >;
 
 	DependentComponent( Component& component )
 	{
@@ -33,40 +31,15 @@ struct DependentComponent
 };
 
 
-template< typename Context >
-class BroaderDomain:
-  public rod::Contextual< Context, rod::Singleton< DependentComponent > >
-{
-public:
-
-	ROD_Contextual_Constructor( BroaderDomain )
-
-	void
-	enter()
-	{}
-};
-
-
-template< typename Context >
-class Domain:
-  public rod::Contextual< Context, rod::Singleton< Component > >
-{
-public:
-
-	ROD_Contextual_Constructor( Domain )
-
-	void
-	enter()
-	{
-		rod::create< BroaderDomain >( this ).enter();
-	}
-};
-
-
 void
 test()
 {
-	rod::enterPlain< Domain >();
+	rod::enter(
+	[] ( rod::Root& root )
+	{
+		auto	withComponent = rod::extend( root ).with< rod::Singleton< Component > >()();
+		rod::extend( withComponent ).with< rod::Singleton< DependentComponent > >()();
+	});
 
 	assert( called );
 }

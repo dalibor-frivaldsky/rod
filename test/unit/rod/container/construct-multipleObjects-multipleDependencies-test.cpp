@@ -10,7 +10,7 @@
 
 struct C1
 {
-	using ConstructWith = rod::annotation::ConstructWith< int, float >;
+	using Requires = rod::annotation::Requires< int, float >;
 
 	C1( int a, float b )
 	{
@@ -21,7 +21,7 @@ struct C1
 
 struct C2
 {
-	using ConstructWith = rod::annotation::ConstructWith< float, double >;
+	using Requires = rod::annotation::Requires< float, double >;
 
 	C2( float a, double b )
 	{

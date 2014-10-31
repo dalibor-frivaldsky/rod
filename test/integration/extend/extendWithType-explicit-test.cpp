@@ -3,6 +3,7 @@
 #include <rod/Extend.hpp>
 #include <rod/Find.hpp>
 #include <rod/Rod.hpp>
+#include <rod/match/Type.hpp>
 
 
 
@@ -23,7 +24,7 @@ test()
 		static_assert( std::is_same<
 							rod::Find<
 								decltype( context ),
-								rod::IsType< Type > >::r,
+								rod::match::Type< Type > >::r,
 							rod::TypeList< Type > >::value,
 					   "Type not found in context" );
 	});

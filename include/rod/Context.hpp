@@ -6,13 +6,13 @@
 #include <utility>
 
 #include <rod/AsContextual.hpp>
+#include <rod/ContextAccessor.hpp>
 #include <rod/ContextLevel.hpp>
+#include <rod/Injected.hpp>
 #include <rod/TypeList.hpp>
 #include <rod/annotation/Component.hpp>
 #include <rod/annotation/ContextualRecord.hpp>
 #include <rod/annotation/Resolver.hpp>
-#include <rod/holder/InjectedReference.hpp>
-#include <rod/holder/InjectedValue.hpp>
 
 
 
@@ -26,18 +26,6 @@ namespace rod
 
 	namespace detail
 	{
-
-		template< typename Ctx, typename... NewType >
-		struct CreateChildContext;
-
-		template< typename... CtxLevel, typename... NewType >
-		struct CreateChildContext< Context< CtxLevel... >, NewType... >
-		{
-			using r = Context<
-						typename CreateContextLevel< NewType... >::r,
-						CtxLevel... >;
-		};
-
 
 		template< typename Context, typename Deps >
 		struct CanResolveDeps;
@@ -116,18 +104,34 @@ namespace rod
 
 
 		template< typename... NewType >
-		struct FilterComponents
+		struct FilterNonInjectedComponents
 		{
 		private:
 			template< typename T >
-			struct IsNotComponent
+			struct IsNotInjectedComponent;
+
+			template< typename T >
+			struct IsNotInjectedComponent< Injected< T > >
+			{
+				enum { r = true };
+			};
+
+			template< typename T >
+			struct IsNotInjectedComponent
 			{
 				enum { r = annotation::IsComponent< T >::r == false };
 			};
 
+
+			template< typename T >
+			struct IsComponent
+			{
+				enum { r = !IsNotInjectedComponent< T >::r };
+			};
+
 		public:
-			using Components = typename TypeList< NewType... >::template Select< annotation::IsComponent >::r;
-			using NotComponents = typename TypeList< NewType... >::template Select< IsNotComponent >::r;
+			using Components = typename TypeList< NewType... >::template Select< IsComponent >::r;
+			using NotInjectedComponents = typename TypeList< NewType... >::template Select< IsNotInjectedComponent >::r;
 		};
 
 
@@ -138,15 +142,29 @@ namespace rod
 		struct Enrich< Context< CurrentLevel, ParentLevel... >, NewType... >
 		{
 		private:
-			using filtered = FilterComponents< NewType... >;
-			using nonComponentEnriched = typename filtered::NotComponents::template UnpackTo<
+			using Filtered = FilterNonInjectedComponents< NewType... >;
+			using NonComponentEnriched = typename Filtered::NotInjectedComponents::template UnpackTo<
 											CurrentLevel::template Enrich >::r::r;
-			using enriched = typename filtered::Components::template UnpackTo1<
+			using Enriched = typename Filtered::Components::template UnpackTo1<
 										OrderedLevelEnrich,
-										Context< nonComponentEnriched, ParentLevel... > >::r::r;
+										Context< NonComponentEnriched, ParentLevel... > >::r::r;
 
 		public:
-			using r = Context< enriched, ParentLevel... >;
+			using r = Context< Enriched, ParentLevel... >;
+		};
+
+
+		template< typename Ctx, typename... NewType >
+		struct CreateChildContext;
+
+		template< typename... CtxLevel, typename... NewType >
+		struct CreateChildContext< Context< CtxLevel... >, NewType... >
+		{
+			using r = typename Enrich<
+						Context<
+							typename CreateContextLevel<>::r,
+							CtxLevel... >,
+						NewType... >::r;
 		};
 
 
@@ -392,8 +410,22 @@ namespace rod
 	template<>
 	struct Context<>
 	{
+		friend class ContextAccessor< Context<> >;
+
+
 	private:
 		using This = Context<>;
+
+		This&
+		getContext()
+		{
+			return *this;
+		}
+
+		struct GetContext
+		{
+			using r = This;
+		};
 
 
 	public:
@@ -429,13 +461,26 @@ namespace rod
 	template< typename CurrentLevel, typename... ParentLevel >
 	struct Context< CurrentLevel, ParentLevel... >
 	{
-
 		template< typename... Level >
 		friend struct Context;
+
+		friend class ContextAccessor< Context< CurrentLevel, ParentLevel... > >;
 
 	private:
 
 		using This = Context< CurrentLevel, ParentLevel... >;
+
+
+		This&
+		getContext()
+		{
+			return *this;
+		}
+
+		struct GetContext
+		{
+			using r = This;
+		};
 
 
 		Context< ParentLevel... >&	parent;
