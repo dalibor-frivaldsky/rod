@@ -14,6 +14,8 @@
 #include <rod/annotation/Component.hpp>
 #include <rod/annotation/ContextualRecord.hpp>
 #include <rod/annotation/Resolver.hpp>
+#include <rod/match/Component.hpp>
+#include <rod/match/Interface.hpp>
 
 
 
@@ -251,32 +253,6 @@ namespace rod
 		};
 
 
-		template< typename Ctx >
-		struct GetComponents;
-
-		template< typename... CtxLevel >
-		struct GetComponents< Context< CtxLevel... > >
-		{
-		private:
-			template< typename CLevel >
-			struct GetContainedTypes
-			{
-				using r = typename CLevel::Container::ContainedTypes::r;
-			};
-
-
-			template< typename Next, typename Result >
-			struct MergeContainedTypes
-			{
-				using r = typename Result::template PrependAll< Next >::r;
-			};
-
-
-		public:
-			using r = typename Reduce< MergeContainedTypes, TypeList<>, typename GetContainedTypes< CtxLevel >::r... >::r;
-		};
-
-
 		template< typename Context, typename Component, typename CurrentContains = void >
 		struct FindOwningContext;
 
@@ -305,30 +281,17 @@ namespace rod
 		};
 
 
-		template< typename Ctx, typename Interface >
-		struct FindImplementors
-		{
-		private:
-			template< typename Implementor >
-			struct IsImplementor
-			{
-				enum { r = std::is_base_of< Interface, Implementor >::value };
-			};
-
-		public:
-			using r = typename Ctx::GetComponents::r::template Select< IsImplementor >::r;
-		};
-
-
 		template< typename Ctx, typename ToRetrieve >
 		struct CanRetrieve
 		{
 		private:
-			using decayed = typename std::decay< ToRetrieve >::type;
+			using Decayed = typename std::decay< ToRetrieve >::type;
 
 		public:
 			enum { r = std::is_lvalue_reference< ToRetrieve >::value &&
-					   FindImplementors< Ctx, decayed >::r::Length::r > 0 };
+					   Find<
+					   		Ctx,
+					   		match::Component< match::Interface< Decayed > > >::r::Length::r > 0 };
 		};
 
 
@@ -500,11 +463,6 @@ namespace rod
 
 		using GetTypeRegistry = detail::GetTypeRegistry< This >;
 
-		using GetComponents = detail::GetComponents< This >;
-
-		template< typename Interface >
-		using FindImplementors = detail::FindImplementors< This, Interface >;
-
 		template< typename Component >
 		using FindOwningContext = detail::FindOwningContext< This, Component >;
 
@@ -537,10 +495,13 @@ namespace rod
 			ToResolve >::type
 		resolve()
 		{
-			using decayed = typename std::decay< ToResolve >::type;
-			using implementor = typename detail::FindImplementors< This, decayed >::r::Head::r;
+			using Decayed = typename std::decay< ToResolve >::type;
+			using Implementer = typename Find<
+									This,
+									match::Component< match::Interface< Decayed > > >::r
+										::Head::r;
 
-			return retrieve< implementor >();
+			return retrieve< Implementer >();
 
 			/*std::string					toResolveName = common::typeName< ToResolve >();
 			configuration::Interfaces&	interfacesConfig = this->template retrieve< configuration::Interfaces >();
