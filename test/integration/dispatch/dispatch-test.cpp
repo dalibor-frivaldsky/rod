@@ -1,13 +1,10 @@
-#include "rod/Context.hpp"
-
-
 #include <cassert>
 
-#include "rod/Annotation.hpp"
-#include "rod/AsContextual.hpp"
-#include "rod/Contextual.hpp"
-#include "rod/Dispatcher.hpp"
-#include "rod/Rod.hpp"
+#include <rod/Annotation.hpp>
+#include <rod/Dispatcher.hpp>
+#include <rod/Extend.hpp>
+#include <rod/Rod.hpp>
+#include <rod/match/Annotation.hpp>
 
 
 
@@ -26,15 +23,11 @@ namespace annotation
 }
 
 
-template< typename Context >
-struct Contextual1:
-	private rod::Contextual< Context >
+struct Controller1
 {
 	using Annotation = annotation::Annotation;
 
 	enum { id = 1 };
-
-	ROD_Contextual_Constructor( Contextual1 );
 
 	void
 	method( int multiplier )
@@ -44,15 +37,11 @@ struct Contextual1:
 };
 
 
-template< typename Context >
-struct Contextual2:
-	private rod::Contextual< Context >
+struct Controller2
 {
 	using Annotation = annotation::Annotation;
 
 	enum { id = 2 };
-
-	ROD_Contextual_Constructor( Contextual2 );
 
 	void
 	method( int multiplier )
@@ -76,43 +65,12 @@ struct Handle
 
 struct Performer
 {
-	template< template< typename > class Branch, typename Contextual >
+	template< typename Branch, typename Context >
 	static
 	void
-	perform( Contextual* contextual, int multiplier )
+	perform( Context&, int multiplier )
 	{
-		rod::create< Branch >( contextual ).method( multiplier );
-	}
-};
-
-
-template< typename Context >
-class Domain:
-  public rod::Contextual<
-  				Context,
-  				rod::AsContextual< Contextual2 >,
-  				rod::AsContextual< Contextual1 > >
-{
-private:
-	using This = Domain< Context >;
-
-
-public:
-	ROD_Contextual_Constructor( Domain )
-
-	void
-	enter()
-	{
-		auto	dispatcher = rod::dispatcher<
-									annotation::IsAnnotation,
-									Handle,
-									Performer >( this );
-
-		dispatcher.dispatch( 1, 7 );
-		assert( value == 70 );
-		
-		dispatcher.dispatch( 2, 3 );
-		assert( value == 60 );
+		Branch().method( multiplier );
 	}
 };
 
@@ -120,5 +78,19 @@ public:
 void
 test()
 {
-	rod::enterPlain< Domain >();
+	rod::enter(
+	[] ( rod::Root& root )
+	{
+		auto	withControllers = rod::extend( root ).with< Controller1, Controller2 >()();
+		auto	dispatcher = rod::dispatcher<
+								rod::match::Annotation< annotation::IsAnnotation >,
+								Handle,
+								Performer >( withControllers );
+
+		dispatcher.dispatch( 1, 7 );
+		assert( value == 70 );
+		
+		dispatcher.dispatch( 2, 3 );
+		assert( value == 60 );
+	});
 }

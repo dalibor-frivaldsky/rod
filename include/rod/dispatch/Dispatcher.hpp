@@ -3,7 +3,7 @@
 
 #include <utility>
 
-#include <rod/ContextualAccessor.hpp>
+#include <rod/Find.hpp>
 
 
 
@@ -15,36 +15,35 @@ namespace rod
 	{
 
 		template<
-			typename ParentContextual,
+			typename Context,
 			template< typename, typename, typename, typename > class DispatcherType,
-			template< typename > class Selector,
+			typename Matcher,
 			typename BranchHandle,
 			typename BranchPerformer >
 		class Dispatcher
 		{
 		private:
-			using Accessor = ContextualAccessor< ParentContextual >;
+			using Branches = typename Find< Context, Matcher >::r;
 			using DispatcherImpl = DispatcherType<
-										ParentContextual,
+										Context,
 										BranchHandle,
 										BranchPerformer,
-										typename Accessor::Context
-											::template FindRegisteredContextual< Selector >::r >;
+										Branches >;
 
 
 			DispatcherImpl	dispatcherImpl;
 
 		public:
-			Dispatcher( ParentContextual* parentContextual ):
-			  dispatcherImpl( parentContextual )
+			Dispatcher( Context& context ):
+			  dispatcherImpl( context )
 			{}
 
 
-			template< typename Handle, typename... ToPass >
+			template< typename Handle, typename... ToForward >
 			void
-			dispatch( const Handle& handle, ToPass&&... toPass )
+			dispatch( const Handle& handle, ToForward&&... toForward )
 			{
-				dispatcherImpl.dispatch( handle, std::forward< ToPass >( toPass )... );
+				dispatcherImpl.dispatch( handle, std::forward< ToForward >( toForward )... );
 			}
 		};
 		

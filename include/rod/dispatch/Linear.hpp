@@ -3,8 +3,7 @@
 
 #include <utility>
 
-#include <rod/Bind.hpp>
-#include <rod/ContextualAccessor.hpp>
+#include <rod/TypeList.hpp>
 
 
 
@@ -15,22 +14,22 @@ namespace rod
 	namespace dispatch
 	{
 
-		namespace linear
+		namespace detail
 		{
 
 			template<
 				typename BranchHandle,
 				typename BranchPerformer,
-				typename... Branches >
+				typename... Branch >
 			struct DispatchChain;
 
 			template< typename BranchHandle, typename BranchPerformer >
 			struct DispatchChain< BranchHandle, BranchPerformer >
 			{
-				template< typename Contextual, typename Handle, typename... ToPass >
+				template< typename Context, typename Handle, typename... ToForward >
 				static
 				void
-				perform( Contextual*, const Handle&, ToPass&&... toPass )
+				perform( Context&, const Handle&, ToForward&&... )
 				{
 					//std::cout << "No handler for command \"" << command.getName() << "\"" << std::endl;
 					// TODO throw
@@ -40,30 +39,26 @@ namespace rod
 			template<
 				typename BranchHandle,
 				typename BranchPerformer,
-				template< typename > class BranchDef, typename Ctx,
+				typename Branch,
 				typename... Rest >
-			struct DispatchChain< BranchHandle, BranchPerformer, BranchDef< Ctx >, Rest... >
+			struct DispatchChain< BranchHandle, BranchPerformer, Branch, Rest... >
 			{
-			private:
-				using branch = BranchDef< Ctx >;
-
-
 			public:
-				template< typename ParentContextual, typename Handle, typename... ToPass >
+				template< typename Context, typename Handle, typename... ToForward >
 				static
 				void
-				perform( ParentContextual* parentContextual, const Handle& handle, ToPass&&... toPass )
+				perform( Context& context, const Handle& handle, ToForward&&... toForward )
 				{
-					if( handle == BranchHandle::template handle< branch >() )
+					if( handle == BranchHandle::template handle< Branch >() )
 					{
-						BranchPerformer::template perform< BranchDef >(
-								parentContextual,
-								std::forward< ToPass >( toPass )... );
+						BranchPerformer::template perform< Branch >(
+								context,
+								std::forward< ToForward >( toForward )... );
 					}
 					else
 					{
 						DispatchChain< BranchHandle, BranchPerformer, Rest... >
-							::perform( parentContextual, handle, std::forward< ToPass >( toPass )... );
+							::perform( context, handle, std::forward< ToForward >( toForward )... );
 					}
 				}
 			};
@@ -72,44 +67,37 @@ namespace rod
 
 
 		template<
-			typename ParentContextual,
+			typename Context,
 			typename BranchHandle,
 			typename BranchPerformer,
-			typename BranchRecords >
+			typename Branches >
 		struct Linear;
 
 		template<
-			typename ParentContextual,
+			typename Context,
 			typename BranchHandle,
 			typename BranchPerformer,
-			typename... BranchRecord >
-		struct Linear< ParentContextual, BranchHandle, BranchPerformer, TypeList< BranchRecord... > >
+			typename... Branch >
+		struct Linear< Context, BranchHandle, BranchPerformer, TypeList< Branch... > >
 		{
 		private:
-			ParentContextual*	parentContextual;
-
-
-			template< typename BR >
-			struct BindBranch
-			{
-				using r = typename Bind< ParentContextual, BR::template Contextual >::r;
-			};
+			Context&	context;
 
 
 		public:
-			Linear( ParentContextual* parentContextual ):
-			  parentContextual( parentContextual )
+			Linear( Context& context ):
+			  context( context )
 			{}
 
-			template< typename Handle, typename... ToPass >
+			template< typename Handle, typename... ToForward >
 			void
-			dispatch( const Handle& handle, ToPass&&... toPass )
+			dispatch( const Handle& handle, ToForward&&... toForward )
 			{
-				linear::DispatchChain<
+				detail::DispatchChain<
 					BranchHandle,
 					BranchPerformer,
-					typename BindBranch< BranchRecord >::r... >
-						::perform( parentContextual, handle, std::forward< ToPass >( toPass )... );
+					Branch... >
+						::perform( context, handle, std::forward< ToForward >( toForward )... );
 			}
 		};
 		

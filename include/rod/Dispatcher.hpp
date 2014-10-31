@@ -11,25 +11,25 @@ namespace rod
 {
 
 	template<
-		template< typename > class Selector,
+		typename Matcher,
 		typename BranchHandle,
 		typename BranchPerformer,
 		template< typename, typename, typename, typename > class DispatcherType = dispatch::Linear,
-		typename ParentContextual >
+		typename Context >
 	dispatch::Dispatcher<
-		ParentContextual,
+		Context,
 		DispatcherType,
-		Selector,
+		Matcher,
 		BranchHandle,
 		BranchPerformer >
-	dispatcher( ParentContextual* parentContextual )
+	dispatcher( Context& context )
 	{
 		return dispatch::Dispatcher<
-					ParentContextual,
+					Context,
 					DispatcherType,
-					Selector,
+					Matcher,
 					BranchHandle,
-					BranchPerformer >( parentContextual );
+					BranchPerformer >( context );
 	}
 	
 }

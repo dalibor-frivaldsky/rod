@@ -3,11 +3,8 @@
 
 #include <cassert>
 
-#include "rod/Annotation.hpp"
-#include "rod/AsContextual.hpp"
-#include "rod/Contextual.hpp"
-#include "rod/Rod.hpp"
-#include "rod/dispatch/Linear.hpp"
+#include <rod/Rod.hpp>
+#include <rod/dispatch/Linear.hpp>
 
 
 
@@ -15,13 +12,9 @@
 int	value = 0;
 
 
-template< typename Context >
-struct Contextual1:
-	private rod::Contextual< Context >
+struct Controller1
 {
 	enum { id = 1 };
-
-	ROD_Contextual_Constructor( Contextual1 );
 
 	void
 	method()
@@ -31,13 +24,9 @@ struct Contextual1:
 };
 
 
-template< typename Context >
-struct Contextual2:
-	private rod::Contextual< Context >
+struct Controller2
 {
 	enum { id = 2 };
-
-	ROD_Contextual_Constructor( Contextual2 );
 
 	void
 	method()
@@ -61,45 +50,12 @@ struct Handle
 
 struct Performer
 {
-	template< template< typename > class Branch, typename Contextual >
+	template< typename Branch, typename Context >
 	static
 	void
-	perform( Contextual* contextual )
+	perform( Context& )
 	{
-		rod::create< Branch >( contextual ).method();
-	}
-};
-
-
-template< typename Context >
-class Domain:
-  public rod::Contextual<
-  				Context >
-{
-private:
-	using This = Domain< Context >;
-
-
-public:
-	ROD_Contextual_Constructor( Domain )
-
-	void
-	enter()
-	{
-		using linear = rod::dispatch::Linear<
-							This,
-							Handle,
-							Performer,
-							rod::TypeList<
-								rod::AsContextual< Contextual1 >,
-								rod::AsContextual< Contextual2 > > >;
-		linear	l( this );
-		
-		l.dispatch( 1 );
-		assert( value == 10 );
-
-		l.dispatch( 2 );
-		assert( value == 20 );
+		Branch().method();
 	}
 };
 
@@ -107,5 +63,22 @@ public:
 void
 test()
 {
-	rod::enterPlain< Domain >();
+	rod::enter(
+	[] ( rod::Root& root )
+	{
+		using linear = rod::dispatch::Linear<
+							rod::Root,
+							Handle,
+							Performer,
+							rod::TypeList<
+								Controller1,
+								Controller2 > >;
+		linear	l( root );
+		
+		l.dispatch( 1 );
+		assert( value == 10 );
+
+		l.dispatch( 2 );
+		assert( value == 20 );
+	});
 }
