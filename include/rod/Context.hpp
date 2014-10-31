@@ -8,6 +8,7 @@
 #include <rod/AsContextual.hpp>
 #include <rod/ContextAccessor.hpp>
 #include <rod/ContextLevel.hpp>
+#include <rod/Find.hpp>
 #include <rod/Injected.hpp>
 #include <rod/TypeList.hpp>
 #include <rod/annotation/Component.hpp>

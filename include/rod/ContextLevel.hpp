@@ -26,36 +26,6 @@ namespace rod
 
 	namespace detail
 	{
-		template< typename Type, typename IsComponent = void >
-		struct TypeFromComponent;
-		
-		template< typename Component >
-		struct TypeFromComponent< Component, typename std::enable_if< annotation::IsComponent< Component >::r >::type >
-		{
-			using r = typename Component::Type;
-		} ;
-
-		template< typename Type >
-		struct TypeFromComponent< Type, typename std::enable_if< !annotation::IsComponent< Type >::r >::type >
-		{
-			using r = Type;
-		};
-		
-
-		template< typename... T >
-		struct TypeFromComponents
-		{
-		private:
-			template< typename Type >
-			struct Extract
-			{
-				using r = typename TypeFromComponent< Type >::r;
-			};
-
-		public:
-			using r = typename TypeList< T... >::template Apply< Extract >::r;
-		};
-
 
 		template< typename... Type >
 		struct SelectComponents
@@ -84,8 +54,7 @@ namespace rod
 	struct CreateContextLevel
 	{
 		using r = ContextLevel<
-					typename detail::TypeFromComponents< Type... >::r
-						::template UnpackTo< CreateTypeRegistry >::r::r,
+					typename CreateTypeRegistry< Type... >::r,
 					typename detail::SelectComponents< Type... >::r
 						::template UnpackTo< CreateContainer >::r::r
 				  >;

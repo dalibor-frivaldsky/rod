@@ -1,13 +1,11 @@
 #pragma once
 
 
-#include <functional>
-#include <type_traits>
-
 #include <rod/ContextAccessor.hpp>
 #include <rod/Find.hpp>
 #include <rod/Generate.hpp>
 #include <rod/TypeList.hpp>
+#include <rod/match/Component.hpp>
 #include <rod/match/Interface.hpp>
 
 
@@ -57,7 +55,7 @@ namespace rod
 	{
 		using Implementers = typename Find<
 								Context,
-								match::Interface< Interface > >::r;
+								match::Component< match::Interface< Interface > > >::r;
 
 		detail::Perform< Implementers >::perform( context, closure );
 	}

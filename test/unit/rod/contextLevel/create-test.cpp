@@ -46,7 +46,7 @@ test()
 							rod::Singleton< Component >
 						>::r,
 						rod::ContextLevel<
-							rod::CreateTypeRegistry< Type, Component >::r,
+							rod::CreateTypeRegistry< Type, rod::Singleton< Component > >::r,
 							rod::CreateContainer< rod::Singleton< Component > >::r
 						>
 				   >::value,
