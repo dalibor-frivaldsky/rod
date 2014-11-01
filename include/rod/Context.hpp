@@ -301,13 +301,13 @@ namespace rod
 		template< typename Resolver, typename ToResolve, typename... Dep >
 		struct ResolverResolve< Resolver, ToResolve, TypeList< Dep... > >
 		{
-			template< typename Ctx >
+			template< typename Context >
 			static
 			ToResolve
-			resolve( Ctx* ctx )
+			resolve( Context& context )
 			{
 				return Resolver::template resolve< ToResolve >(
-						ctx->template resolve< Dep >()... );
+						context.template resolve< Dep >()... );
 			}
 
 		};
@@ -493,7 +493,7 @@ namespace rod
 			using resolver = typename detail::GetResolver< This, ToResolve >::r;
 			using deps = typename resolver::template GetDependencies< ToResolve >::r;
 
-			return detail::ResolverResolve< resolver, ToResolve, deps >::resolve( this );
+			return detail::ResolverResolve< resolver, ToResolve, deps >::resolve( *this );
 		}
 
 
