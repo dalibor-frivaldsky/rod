@@ -5,7 +5,6 @@
 #include <type_traits>
 #include <utility>
 
-#include <rod/AsContextual.hpp>
 #include <rod/ContextAccessor.hpp>
 #include <rod/ContextLevel.hpp>
 #include <rod/Find.hpp>
@@ -14,6 +13,7 @@
 #include <rod/annotation/Component.hpp>
 #include <rod/annotation/ContextualRecord.hpp>
 #include <rod/annotation/Resolver.hpp>
+#include <rod/match/Annotation.hpp>
 #include <rod/match/Component.hpp>
 #include <rod/match/Interface.hpp>
 
@@ -203,56 +203,6 @@ namespace rod
 		};
 
 
-		template< typename Context, template< typename > class Selector >
-		struct FindRegisteredType
-		{
-			using r = typename Context::GetTypeRegistry::r::template Find< Selector >::r;
-		};
-
-
-		template< typename Context, template< typename > class Selector >
-		struct FindRegisteredContextual
-		{
-		private:
-
-			template< typename ContextualRec >
-			struct ContextBinder
-			{
-				using r = typename ContextualRec::template Bind< Context >::r;
-			};
-
-
-			template< typename BoundContextual >
-			struct ContextualResult;
-
-			template< template< typename > class Contextual_, typename BindingContext >
-			struct ContextualResult< Contextual_< BindingContext > >:
-				public Contextual_< BindingContext >
-			{
-				template< typename Ctx >
-				using Contextual = Contextual_< Ctx >;
-			};
-
-
-			template< typename BoundContextual >
-			struct MakeAsContextual;
-
-			template< template< typename > class Contextual, typename Ctx >
-			struct MakeAsContextual< Contextual< Ctx > >
-			{
-				using r = AsContextual< Contextual >;
-			};
-
-
-			using contextualRecords = typename Context::GetTypeRegistry::r::template Find< annotation::IsContextualRecord >::r;
-			using contextualTypes = typename contextualRecords::template Apply< ContextBinder >::r;
-			using selectedContextualTypes = typename contextualTypes::template Select< Selector >::r;
-		
-		public:
-			using r = typename selectedContextualTypes::template Apply< MakeAsContextual >::r;
-		};
-
-
 		template< typename Context, typename Component, typename CurrentContains = void >
 		struct FindOwningContext;
 
@@ -299,7 +249,9 @@ namespace rod
 		struct FindResolvers
 		{
 			private:
-			using allResolvers = typename FindRegisteredType< Ctx, annotation::IsResolver >::r;
+			using allResolvers = typename Find<
+									Ctx,
+									match::Annotation< annotation::IsResolver > >::r;
 
 			template< typename Next, typename Result >
 			struct AppendIfResolves
