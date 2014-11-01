@@ -11,7 +11,6 @@
 #include <rod/Injected.hpp>
 #include <rod/TypeList.hpp>
 #include <rod/annotation/Component.hpp>
-#include <rod/annotation/ContextualRecord.hpp>
 #include <rod/annotation/Resolver.hpp>
 #include <rod/match/Annotation.hpp>
 #include <rod/match/Component.hpp>
