@@ -294,24 +294,6 @@ namespace rod
 		};
 
 
-		template< typename Resolver, typename ToResolve, typename Deps >
-		struct ResolverResolve;
-
-		template< typename Resolver, typename ToResolve, typename... Dep >
-		struct ResolverResolve< Resolver, ToResolve, TypeList< Dep... > >
-		{
-			template< typename Context >
-			static
-			ToResolve
-			resolve( Context& context )
-			{
-				return Resolver::template resolve< ToResolve >(
-						context.template resolve< Dep >()... );
-			}
-
-		};
-
-
 		template< typename Ctx, typename ToResolve >
 		struct CanResolve
 		{
@@ -489,10 +471,9 @@ namespace rod
 			ToResolve >::type
 		resolve()
 		{
-			using resolver = typename detail::GetResolver< This, ToResolve >::r;
-			using deps = typename resolver::template GetDependencies< ToResolve >::r;
+			using Resolver = typename detail::GetResolver< This, ToResolve >::r;
 
-			return detail::ResolverResolve< resolver, ToResolve, deps >::resolve( *this );
+			return Resolver::template resolve< ToResolve >( *this );
 		}
 
 

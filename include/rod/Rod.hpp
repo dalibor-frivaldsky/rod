@@ -11,8 +11,6 @@
 #include <rod/configuration/ConfigurationReader.hpp>*/
 
 
-#include <string>
-
 #include <rod/Root.hpp>
 
 
