@@ -280,7 +280,7 @@ namespace rod
 		Container(
 			Context& context,
 			ToInjectTuple&& toInjectTuple,
-			typename std::enable_if< (Holders::Length::r > 0), void >::type* hasHolders = 0 ):
+			typename std::enable_if< (Holders::Length::r > 0), void >::type* = 0 ):
 		  detail::DefineHolderConstructor< ComponentHolder >::r( context, toInjectTuple )...
 		{}
 
@@ -291,7 +291,7 @@ namespace rod
 		Container(
 			Context&,
 			ToInjectTuple&&,
-			typename std::enable_if< (Holders::Length::r == 0), void >::type* hasHolders = 0 )
+			typename std::enable_if< (Holders::Length::r == 0), void >::type* = 0 )
 		{}
 
 		Container( const This& ) = delete;
