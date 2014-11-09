@@ -122,6 +122,14 @@ namespace rod
 		template< typename ToBuild >
 		struct OwnerBuilder
 		{
+			template< typename Parent >
+			static
+			ToBuild
+			build( Parent& parent, std::tuple<>&, common::Sequence<>&& )
+			{
+				return ToBuild( parent );
+			}
+
 			template< typename Parent, typename ToInjectTuple, int... Seq >
 			static
 			ToBuild
