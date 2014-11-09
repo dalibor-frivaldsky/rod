@@ -4,9 +4,9 @@
 #include <rod/Each.hpp>
 #include <rod/Extend.hpp>
 #include <rod/Evaluable.hpp>
+#include <rod/Resolve.hpp>
 #include <rod/Rod.hpp>
 #include <rod/Singleton.hpp>
-#include <rod/With.hpp>
 #include <rod/annotation/Requires.hpp>
 #include <rod/evaluable/EvaluableResolver.hpp>
 
@@ -90,11 +90,7 @@ test()
 									rod::Singleton< Implementer2 >,
 									rod::Singleton< CallerService > >()();
 
-		rod::with( extended,
-		[&] ( CallerService& callerService )
-		{
-			callerService.performCalls();
-		});
+		rod::resolve< CallerService& >( extended ).performCalls();
 	});
 
 	assert( value == 3 );

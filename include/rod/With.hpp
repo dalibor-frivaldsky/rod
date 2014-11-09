@@ -15,11 +15,11 @@ namespace rod
 	namespace impl
 	{
 
-		template< typename LambdaOp >
-		struct WithDeducedDeps;
+		template< typename Deps >
+		struct WithDeps;
 
-		template< typename Class, typename Return, typename... Dep >
-		struct WithDeducedDeps< Return (Class::*)( Dep... ) const >
+		template< typename ... Dep >
+		struct WithDeps< TypeList< Dep... > >
 		{
 			template< typename Context, typename Closure >
 			static
@@ -29,6 +29,12 @@ namespace rod
 				closure( accessContext( context ).template resolve< Dep >()... );
 			}
 		};
+
+
+		template< typename Return, typename Class, typename... Arg >
+		TypeList< Arg... >
+		getDeps( Return (Class::*)( Arg... ) const )
+		{}
 		
 	}
 
@@ -36,7 +42,8 @@ namespace rod
 	void
 	with( Context& context, Closure&& closure )
 	{
-		impl::WithDeducedDeps< decltype( &Closure::operator() ) >::perform( context, std::forward< Closure >( closure ) );
+		using Deps = decltype( impl::getDeps( &Closure::operator() ) );
+		impl::WithDeps< Deps >::perform( context, std::forward< Closure >( closure ) );
 	}
 	
 }
