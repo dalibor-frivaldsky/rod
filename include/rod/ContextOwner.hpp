@@ -68,9 +68,7 @@ namespace rod
 		  context( new Context( accessContext( parent ), std::forward< ToInject >( toInject )... ) )
 		{}
 
-		ContextOwner( const This& other ):
-		  context( other.context )
-		{}
+		ContextOwner( const This& ) = delete;
 
 		ContextOwner( This&& other ):
 		  context( std::move( other.context ) )
