@@ -1,9 +1,5 @@
-#include "rod/Context.hpp"
-
-
 #include <cassert>
 
-#include <rod/Rod.hpp>
 #include <rod/dispatch/Linear.hpp>
 
 
@@ -50,10 +46,10 @@ struct Handle
 
 struct Performer
 {
-	template< typename Branch, typename Context >
+	template< typename Branch >
 	static
 	void
-	perform( Context& )
+	perform()
 	{
 		Branch().method();
 	}
@@ -63,22 +59,17 @@ struct Performer
 void
 test()
 {
-	rod::enter(
-	[] ( rod::Root& root )
-	{
-		using linear = rod::dispatch::Linear<
-							rod::Root,
-							Handle,
-							Performer,
-							rod::TypeList<
-								Controller1,
-								Controller2 > >;
-		linear	l( root );
-		
-		l.dispatch( 1 );
-		assert( value == 10 );
+	using linear = rod::dispatch::Linear<
+						rod::TypeList<
+							Controller1,
+							Controller2 >,
+						Handle,
+						Performer >;
+	linear	l;
+	
+	l.dispatch( 1 );
+	assert( value == 10 );
 
-		l.dispatch( 2 );
-		assert( value == 20 );
-	});
+	l.dispatch( 2 );
+	assert( value == 20 );
 }

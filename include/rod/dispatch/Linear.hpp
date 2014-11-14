@@ -26,10 +26,10 @@ namespace rod
 			template< typename BranchHandle, typename BranchPerformer >
 			struct DispatchChain< BranchHandle, BranchPerformer >
 			{
-				template< typename Context, typename Handle, typename... ToForward >
+				template< typename Handle, typename... ToForward >
 				static
 				void
-				perform( Context&, const Handle&, ToForward&&... )
+				perform( const Handle&, ToForward&&... )
 				{
 					//std::cout << "No handler for command \"" << command.getName() << "\"" << std::endl;
 					// TODO throw
@@ -44,21 +44,20 @@ namespace rod
 			struct DispatchChain< BranchHandle, BranchPerformer, Branch, Rest... >
 			{
 			public:
-				template< typename Context, typename Handle, typename... ToForward >
+				template< typename Handle, typename... ToForward >
 				static
 				void
-				perform( Context& context, const Handle& handle, ToForward&&... toForward )
+				perform( const Handle& handle, ToForward&&... toForward )
 				{
 					if( handle == BranchHandle::template handle< Branch >() )
 					{
 						BranchPerformer::template perform< Branch >(
-								context,
 								std::forward< ToForward >( toForward )... );
 					}
 					else
 					{
 						DispatchChain< BranchHandle, BranchPerformer, Rest... >
-							::perform( context, handle, std::forward< ToForward >( toForward )... );
+							::perform( handle, std::forward< ToForward >( toForward )... );
 					}
 				}
 			};
@@ -67,28 +66,17 @@ namespace rod
 
 
 		template<
-			typename Context,
+			typename Branches,
 			typename BranchHandle,
-			typename BranchPerformer,
-			typename Branches >
+			typename BranchPerformer >
 		struct Linear;
 
 		template<
-			typename Context,
 			typename BranchHandle,
 			typename BranchPerformer,
 			typename... Branch >
-		struct Linear< Context, BranchHandle, BranchPerformer, TypeList< Branch... > >
+		struct Linear< TypeList< Branch... >, BranchHandle, BranchPerformer >
 		{
-		private:
-			Context&	context;
-
-
-		public:
-			Linear( Context& context ):
-			  context( context )
-			{}
-
 			template< typename Handle, typename... ToForward >
 			void
 			dispatch( const Handle& handle, ToForward&&... toForward )
@@ -97,7 +85,7 @@ namespace rod
 					BranchHandle,
 					BranchPerformer,
 					Branch... >
-						::perform( context, handle, std::forward< ToForward >( toForward )... );
+						::perform( handle, std::forward< ToForward >( toForward )... );
 			}
 		};
 		
