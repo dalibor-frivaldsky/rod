@@ -5,6 +5,7 @@
 #include <utility>
 
 #include <rod/ContextAccessor.hpp>
+#include <rod/TypeList.hpp>
 
 
 
@@ -18,7 +19,7 @@ namespace rod
 		template< typename Deps >
 		struct WithDeps;
 
-		template< typename ... Dep >
+		template< typename... Dep >
 		struct WithDeps< TypeList< Dep... > >
 		{
 			template< typename Context, typename Closure >
