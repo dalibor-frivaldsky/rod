@@ -1,6 +1,7 @@
 test/**/*.obj
 test/**/*.out
 test/**/*.exe
+target
 
 rod.sublime-project
 rod.sublime-workspace
