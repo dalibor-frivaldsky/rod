@@ -1,0 +1,11 @@
+#include <type_traits>
+
+
+namespace rod { namespace resolve {
+
+	template< typename T >
+	concept bool FeatureQueryOperator() {
+		return decltype( std::declval<T>()( T::true_value ) )::value == true;
+	}
+
+}}

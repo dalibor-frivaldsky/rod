@@ -1,0 +1,11 @@
+#include <type_traits>
+
+
+namespace rod { namespace resolve {
+
+	template< typename T >
+	concept bool TypeRepC() {
+		return std::is_same<T, boost::hana::type< typename T::type > >::value;
+	}
+
+}}
