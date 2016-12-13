@@ -1,0 +1,55 @@
+#include <boost/hana.hpp>
+#include <rod/resolve/concept/TypeRepC>
+#include <type_traits>
+
+
+namespace rod { namespace resolve {
+
+	namespace detail {
+
+		template< typename T >
+		struct instance_of_impl {
+
+			template< TypeRepC TypeRep >
+			constexpr auto operator () ( TypeRep typeRep ) const {
+				constexpr auto callable = std::is_callable< typename TypeRep::type(), T >::value;
+				if constexpr( callable ) {
+					using ReturnType = decltype( std::declval< typename TypeRep::type >()() );
+					if constexpr( std::is_same< ReturnType, T >::value ) {
+						return boost::hana::true_c;
+					}
+					else if constexpr( std::is_lvalue_reference< ReturnType >::value &&
+									   std::is_lvalue_reference< T >::value ) {
+						return boost::hana::bool_c<
+							std::is_base_of<
+								typename std::remove_reference< T >::type,
+								typename std::remove_reference< ReturnType >::type
+							>::value
+						>;
+				    }
+				    else if constexpr( std::is_pointer< ReturnType >::value &&
+									   std::is_pointer< T >::value ) {
+						return boost::hana::bool_c<
+							std::is_base_of<
+								typename std::remove_pointer< T >::type,
+								typename std::remove_pointer< ReturnType >::type
+							>::value
+						>;
+				    }
+					else {
+						return boost::hana::false_c;
+					}
+				}
+				else {
+					return boost::hana::false_c;
+				}
+			}
+
+		};
+
+	}
+
+	template< typename T >
+	constexpr auto instance_of = detail::instance_of_impl<T>{};
+
+}}

@@ -48,7 +48,7 @@ enable_testing()
 
 set(ROD_TEST_SOURCES
 	${ROD_TEST_DIR}/test_main.cpp
-	${ROD_TEST_DIR}/unit/rod/resolve/feature-query/instance_of.operator.spec.cpp
+	${ROD_TEST_DIR}/unit/rod/resolve/feature_query/instance_of.spec.cpp
 )
 
 #if(NOT TARGET Catch)
