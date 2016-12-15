@@ -49,6 +49,8 @@ enable_testing()
 set(ROD_TEST_SOURCES
 	${ROD_TEST_DIR}/test_main.cpp
 	${ROD_TEST_DIR}/unit/rod/resolve/feature_query/instance_of.spec.cpp
+	${ROD_TEST_DIR}/unit/rod/resolve/hana_tuple.spec.cpp
+	${ROD_TEST_DIR}/integration/rod/resolve/hana_monad_instance_resolving.spec.cpp
 )
 
 #if(NOT TARGET Catch)

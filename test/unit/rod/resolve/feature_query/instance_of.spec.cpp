@@ -7,7 +7,7 @@
 using namespace rod::resolve;
 
 
-SCENARIO( "instance_of_impl is a FeatureQueryOperator", "[uni][resolve]" ) {
+SCENARIO( "instance_of_impl is a FeatureQueryOperator", "[unit][resolve]" ) {
 	static_assert( FeatureQueryOperator< detail::instance_of_impl< int > >() );
 }
 

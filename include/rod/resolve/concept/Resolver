@@ -1,0 +1,11 @@
+#include <type_traits>
+
+
+namespace rod { namespace resolve {
+
+	template< typename T >
+	concept bool Resolver() {
+		return !std::is_same< typename std::result_of< T() >::type, void >::value;
+	}
+
+}}
