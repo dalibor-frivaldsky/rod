@@ -1,0 +1,47 @@
+#pragma once
+
+#include <boost/hana.hpp>
+#include <rod/boost/hana_concept>
+#include <utility>
+
+
+namespace rod { 
+
+	namespace boost_detail {
+
+		template< typename T >
+		constexpr auto generate_resolvers( T& v ) {
+			return boost::hana::tuple(
+				[&] { return v; },
+				[&] ()-> T& { return v; },
+				[&] { return &v; }
+			);
+		}
+
+		template< typename T >
+		constexpr auto generate_resolvers( T* v ) {
+			return boost::hana::tuple(
+				[&] { return *v; },
+				[&] ()-> T& { return *v; },
+				[&] { return v; }
+			);
+		}
+
+	}
+
+}
+
+namespace boost { namespace hana {
+
+	template< rod::boost_detail::hana_concept< Monad > M, typename Query >
+		constexpr auto resolve_impl( M&& monad, Query&& query ) {
+			return filter(
+				monad | [] (auto& v) { return rod::boost_detail::generate_resolvers( v ); },
+				[&] (auto&& resolver) {
+					constexpr auto resolvableType = type_c<decltype(resolver)>;
+			 		return decltype(query(resolvableType)){};
+				}
+			);
+		}
+
+}}

@@ -1,7 +1,9 @@
+#pragma once
+
 #include <type_traits>
 
 
-namespace rod { namespace resolve {
+namespace rod { namespace resolve_framework {
 
 	template< typename T >
 	concept bool FeatureQueryOperator() {

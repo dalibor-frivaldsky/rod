@@ -1,0 +1,43 @@
+#pragma once
+
+#include <rod/resolve_framework/feature_query/instance_of>
+#include <type_traits>
+#include <utility>
+
+
+namespace rod {
+
+	namespace resolve_framework {
+
+		template< typename Source, typename Operator >
+		constexpr auto resolve_impl(Source s, Operator o);
+
+		template< typename Operator >
+		struct ResolveImpl {
+
+		private:
+			Operator&&	op;
+
+		public:
+			ResolveImpl(Operator&& op):
+			  op(std::forward<Operator>(op))
+			{}
+
+			template< typename Source >
+				requires requires(Source&& s, Operator&& op) { resolve_impl(s, op); }
+			constexpr auto operator () (Source&& source) const {
+				return resolve_impl(
+					std::forward< Source >(source),
+					std::forward< Operator >(op)
+				);
+			}
+
+		};
+
+	}
+
+	auto resolve = [] (auto&& op) {
+		return resolve_framework::ResolveImpl{ std::forward<decltype(op)>(op) };
+	};
+
+}

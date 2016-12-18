@@ -48,9 +48,13 @@ enable_testing()
 
 set(ROD_TEST_SOURCES
 	${ROD_TEST_DIR}/test_main.cpp
-	${ROD_TEST_DIR}/unit/rod/resolve/feature_query/instance_of.spec.cpp
-	${ROD_TEST_DIR}/unit/rod/resolve/hana_tuple.spec.cpp
-	${ROD_TEST_DIR}/integration/rod/resolve/hana_monad_instance_resolving.spec.cpp
+	${ROD_TEST_DIR}/unit/rod/concept/CallableWith.spec.cpp
+	${ROD_TEST_DIR}/unit/rod/pipe.spec.cpp
+	${ROD_TEST_DIR}/unit/rod/resolve.spec.cpp
+	${ROD_TEST_DIR}/unit/rod/resolve_framework/feature_query/instance_of.spec.cpp
+	${ROD_TEST_DIR}/unit/rod/boost/hana_resolve_monad.spec.cpp
+	${ROD_TEST_DIR}/integration/rod/boost/hana_resolve.spec.cpp
+	${ROD_TEST_DIR}/functional/rod/resolve/resolve.api.spec.cpp
 )
 
 #if(NOT TARGET Catch)

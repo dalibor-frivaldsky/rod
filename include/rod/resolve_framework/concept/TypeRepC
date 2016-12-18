@@ -1,7 +1,10 @@
+#pragma once
+
+#include <boost/hana/type.hpp>
 #include <type_traits>
 
 
-namespace rod { namespace resolve {
+namespace rod { namespace resolve_framework {
 
 	template< typename T >
 	concept bool TypeRepC() {

@@ -1,0 +1,13 @@
+#pragma once
+
+#include <type_traits>
+#include <utility>
+
+
+namespace rod {
+	
+	auto get = [] (auto&& source) {
+		return get_impl(std::forward<decltype(source)>(source))();
+	};
+
+}

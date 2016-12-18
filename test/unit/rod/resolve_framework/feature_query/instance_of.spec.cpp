@@ -1,10 +1,10 @@
 #include <boost/hana.hpp>
 #include <catch.hpp>
 #include <functional>
-#include <rod/resolve/concept/FeatureQueryOperator>
-#include <rod/resolve/feature_query/instance_of>
+#include <rod/resolve_framework/concept/FeatureQueryOperator>
+#include <rod/resolve_framework/feature_query/instance_of>
 
-using namespace rod::resolve;
+using namespace rod::resolve_framework;
 
 
 SCENARIO( "instance_of_impl is a FeatureQueryOperator", "[unit][resolve]" ) {

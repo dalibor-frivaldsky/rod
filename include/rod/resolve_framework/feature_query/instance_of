@@ -1,9 +1,11 @@
+#pragma once
+
 #include <boost/hana.hpp>
-#include <rod/resolve/concept/TypeRepC>
+#include <rod/resolve_framework/concept/TypeRepC>
 #include <type_traits>
 
 
-namespace rod { namespace resolve {
+namespace rod { namespace resolve_framework {
 
 	namespace detail {
 

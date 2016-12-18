@@ -1,0 +1,14 @@
+#pragma once
+
+#include <rod/concept/CallableWith>
+#include <utility>
+
+
+namespace rod { namespace operators {
+
+	template< typename Left, CallableWith< Left > Fn >
+	auto operator | (Left&& left, Fn&& fn) {
+		return fn(std::forward<Left>(left));
+	}
+
+}}
