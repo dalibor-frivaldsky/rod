@@ -6,7 +6,7 @@
 
 namespace rod {
 	
-	auto get = [] (auto&& source) {
+	auto get = [] (auto&& source) -> decltype(auto) {
 		return get_impl(std::forward<decltype(source)>(source))();
 	};
 

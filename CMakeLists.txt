@@ -29,6 +29,7 @@ set(ROD_TEST_DIR ${PROJECT_SOURCE_DIR}/test)
 
 include_directories(
 	${PROJECT_SOURCE_DIR}/../../lib/hana/include
+	${PROJECT_SOURCE_DIR}/../../lib/callable_traits-1.1.0/include
 )
 
 
@@ -48,6 +49,7 @@ enable_testing()
 
 set(ROD_TEST_SOURCES
 	${ROD_TEST_DIR}/test_main.cpp
+	${ROD_TEST_DIR}/unit/rod/concept/Callable.spec.cpp
 	${ROD_TEST_DIR}/unit/rod/concept/CallableWith.spec.cpp
 	${ROD_TEST_DIR}/unit/rod/pipe.spec.cpp
 	${ROD_TEST_DIR}/unit/rod/resolve.spec.cpp

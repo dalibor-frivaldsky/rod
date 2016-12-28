@@ -1,0 +1,31 @@
+#pragma once
+
+#include <boost/callable_traits.hpp>
+#include <type_traits>
+
+
+namespace rod {
+
+	namespace detail {
+
+		template< typename Fn >
+		struct make_callable {
+
+			template< typename... Args >
+			using callable = Fn( Args... );
+
+		};
+
+	}
+
+	template< typename Fn >
+	concept bool Callable() {
+		return std::is_callable<
+			boost::callable_traits::expand_args_t<
+				Fn,
+				detail::make_callable< Fn >::template callable
+			>
+		>::value;
+	}
+
+}

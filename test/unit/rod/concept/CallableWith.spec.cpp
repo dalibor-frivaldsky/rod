@@ -35,7 +35,7 @@ SCENARIO( "CallableWith concept models a function type accepting a set of argume
 	GIVEN( "a non-callable object" ) {
 		Foo f{};
 
-		THEN( "CallableWith model is refused if argument types dont match" ) {
+		THEN( "CallableWith model is refused" ) {
 			static_assert( CallableWith< decltype(f) >() == false );
 		}
 	}

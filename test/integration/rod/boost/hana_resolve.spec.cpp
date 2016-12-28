@@ -29,7 +29,10 @@ SCENARIO( "Resolving primitive values", "[integration][resolve]" ) {
 		}
 
 		THEN( "instances of references to values can be resolved" ) {
-			REQUIRE( hana::front( resolve_impl( primitives, instance_of< int& > ) )() == 10 );
+			int& intRef = hana::front( resolve_impl( primitives, instance_of< int& > ) )();
+			REQUIRE( &intRef == &(primitives[hana::int_c<0>]) );
+			REQUIRE( intRef == 10 );
+			
 			REQUIRE( hana::front( resolve_impl( primitives, instance_of< float& > ) )() == 5.0 );
 			REQUIRE( hana::front( resolve_impl( primitives, instance_of< double& > ) )() == 2.5 );
 		}

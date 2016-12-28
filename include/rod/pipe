@@ -7,7 +7,7 @@
 namespace rod { namespace operators {
 
 	template< typename Left, CallableWith< Left > Fn >
-	auto operator | (Left&& left, Fn&& fn) {
+	decltype(auto) operator | (Left&& left, Fn&& fn) {
 		return fn(std::forward<Left>(left));
 	}
 

@@ -1,0 +1,43 @@
+#pragma once
+
+#include <boost/callable_traits.hpp>
+#include <rod/concept/Callable>
+#include <rod/get>
+#include <rod/resolve>
+#include <rod/resolve_framework/feature_query/instance_of>
+#include <type_traits>
+#include <utility>
+
+
+namespace rod {
+
+	namespace detail {
+
+		template< typename... Args >
+		struct with_impl {
+
+			template< Callable Fn, typename Source >
+			static
+			auto call( Fn&& fn, Source&& source ) {
+				return fn(
+					std::forward<Source>(source) | resolve(resolve_framework::instance_of< Args >) | get ...
+				);
+			}
+
+		};
+
+	}
+	
+	auto with = [] (Callable&& withFn) {
+		return [&] (auto&& source) {
+			return boost::callable_traits::expand_args_t<
+				typename std::decay< decltype(withFn) >::type,
+				detail::with_impl
+			>::template call(
+				std::forward< decltype(withFn) >(withFn),
+				std::forward< decltype(source) >(source)
+			);
+		};
+	};
+
+}
