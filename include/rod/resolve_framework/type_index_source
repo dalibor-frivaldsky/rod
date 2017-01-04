@@ -1,0 +1,61 @@
+#pragma once
+
+#include <any>
+#include <boost/callable_traits.hpp>
+#include <functional>
+#include <map>
+#include <range/v3/core.hpp>
+#include <range/v3/view/remove_if.hpp>
+#include <range/v3/view/transform.hpp>
+#include <rod/resolve_framework/concept/Resolver>
+#include <typeindex>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+
+namespace rod { namespace resolve_framework {
+
+	class type_index_source {
+
+	private:
+		using ResolverMap = std::map< std::type_index, std::any >;
+
+		ResolverMap	resolver_map;
+
+	public:
+		template< Resolver R >
+		void register_resolver( R&& resolver ) {
+			using FnWrapper = std::function<
+				boost::callable_traits::return_type_t< typename std::decay< R >::type >()
+			>;
+
+			resolver_map.emplace(
+				std::type_index(typeid(FnWrapper)),
+				std::any{ FnWrapper{ std::forward< R >(resolver) } }
+			);
+		}
+
+		inline
+		const ResolverMap&
+		get_all_resolvers() const {
+			return resolver_map;
+		}
+
+	};
+
+
+	template< typename Query >
+	auto resolve_impl( const type_index_source& source, Query&& query ) {
+		using ResolvingType = typename decltype( query(std::type_index(typeid(int))) )::type;
+
+		return source.get_all_resolvers() 
+			| ranges::view::remove_if([&] (auto&& resolverPair) {
+				return !(bool)query(resolverPair.first);
+			})
+			| ranges::view::transform([] (auto&& acceptedResolverPair) {
+				return std::any_cast< std::function< ResolvingType() > >(acceptedResolverPair.second);
+			});
+	}
+
+}}

@@ -7,7 +7,7 @@
 namespace boost{ namespace hana {
 	
 	template< rod::boost_detail::hana_concept< Monad > M >
-	auto get_impl( M&& m ) {
+	decltype(auto) get_impl( M&& m ) {
 		return front(m);
 	}
 

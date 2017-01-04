@@ -66,7 +66,7 @@ SCENARIO( "instance_of operator evaluates TypeRepC-ed zero-parameter function ty
 
 }
 
-SCENARIO( "instance_of operator evaluation of primitive/non-derived types" ) {
+SCENARIO( "instance_of operator evaluation of primitive/non-derived types", "[unit][resolve]" ) {
 
 	GIVEN( "A non-cv qualified value return type" ) {
 		auto value = [] { return 0; };
@@ -110,7 +110,7 @@ struct Foo {};
 
 struct Bar: public Foo {};
 
-SCENARIO( "instance_of operator evaluation of type hierarchies" ) {
+SCENARIO( "instance_of operator evaluation of type hierarchies", "[unit][resolve]" ) {
 
 	GIVEN( "A non-cv qualified value derived object return type" ) {
 		auto value = [] { return Bar{}; };
@@ -141,6 +141,27 @@ SCENARIO( "instance_of operator evaluation of type hierarchies" ) {
 		THEN( "base and exact pointer types are accepted" ) {
 			BOOST_HANA_CONSTANT_CHECK( instance_of< Foo* >(resolverType) == boost::hana::true_c );
 			BOOST_HANA_CONSTANT_CHECK( instance_of< Bar* >(resolverType) == boost::hana::true_c );
+		}
+	}
+
+}
+
+
+SCENARIO( "instance_of operator evaluates TypeRepR-ed std::function wrappers of resolvers", "[unit][resolve]" ) {
+
+	GIVEN( "std::type_index of and std::function wrapper of zero-parameter non-void return function object" ) {
+		auto iFnIndex = std::type_index{ typeid(std::function< int() >) };
+
+		THEN( "it is accepted" ) {
+			REQUIRE( instance_of< int >( iFnIndex ) == query_result< int >{ true } );
+		}
+	}
+
+	GIVEN( "std::typeindex of non std::function wrapper" ) {
+		auto iIndex = std::type_index{ typeid(int) };
+
+		THEN( "it is not accepted" ) {
+			REQUIRE( instance_of< int >( iIndex ) == query_result< int >{ false } );
 		}
 	}
 

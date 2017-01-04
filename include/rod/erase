@@ -1,0 +1,26 @@
+#pragma once
+
+
+#include <rod/boost/hana_resolve_monad>
+#include <rod/get>
+#include <rod/resolve>
+#include <rod/resolve_framework/type_index_source>
+#include <utility>
+
+
+namespace rod {
+
+	auto erase = [] (auto&& source) {
+		resolve_framework::type_index_source	erasedSource{};
+
+		boost::hana::for_each(
+			source | resolve([] (auto&&) { return boost::hana::true_c; }),
+			[&] (auto&& resolver) {
+				erasedSource.register_resolver(std::forward< decltype(resolver) >(resolver));
+			}
+		);
+		
+		return erasedSource;
+	};
+
+}

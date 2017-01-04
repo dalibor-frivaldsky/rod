@@ -27,9 +27,15 @@ set(CMAKE_CXX_FLAGS "-std=c++1z -fconcepts")
 
 set(ROD_TEST_DIR ${PROJECT_SOURCE_DIR}/test)
 
+
+##
+## Dependencies
+##
+
 include_directories(
 	${PROJECT_SOURCE_DIR}/../../lib/hana/include
 	${PROJECT_SOURCE_DIR}/../../lib/callable_traits-1.1.0/include
+	${PROJECT_SOURCE_DIR}/../../lib/range-v3/include
 )
 
 
@@ -54,8 +60,10 @@ set(ROD_TEST_SOURCES
 	${ROD_TEST_DIR}/unit/rod/pipe.spec.cpp
 	${ROD_TEST_DIR}/unit/rod/resolve.spec.cpp
 	${ROD_TEST_DIR}/unit/rod/resolve_framework/feature_query/instance_of.spec.cpp
+	${ROD_TEST_DIR}/unit/rod/resolve_framework/type_index_source.spec.cpp
 	${ROD_TEST_DIR}/unit/rod/boost/hana_resolve_monad.spec.cpp
 	${ROD_TEST_DIR}/integration/rod/boost/hana_resolve.spec.cpp
+	${ROD_TEST_DIR}/integration/rod/resolve_framework/type_index_source_resolving.spec.cpp
 	${ROD_TEST_DIR}/functional/rod/resolve/resolve.api.spec.cpp
 )
 

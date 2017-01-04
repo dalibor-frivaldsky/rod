@@ -1,0 +1,15 @@
+#pragma once
+
+#include <typeindex>
+#include <typeinfo>
+#include <type_traits>
+
+
+namespace rod { namespace resolve_framework {
+
+	template< typename T >
+	concept bool TypeRepR() {
+		return std::is_same< typename std::decay< T >::type, std::type_index >::value;
+	}
+
+}}
