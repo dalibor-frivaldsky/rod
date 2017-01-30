@@ -57,14 +57,19 @@ set(ROD_TEST_SOURCES
 	${ROD_TEST_DIR}/test_main.cpp
 	${ROD_TEST_DIR}/unit/rod/concept/Callable.spec.cpp
 	${ROD_TEST_DIR}/unit/rod/concept/CallableWith.spec.cpp
+	${ROD_TEST_DIR}/unit/rod/feature/instance/instance.spec.cpp
+	${ROD_TEST_DIR}/unit/rod/feature/instance/as.spec.cpp
 	${ROD_TEST_DIR}/unit/rod/pipe.spec.cpp
 	${ROD_TEST_DIR}/unit/rod/resolve.spec.cpp
 	${ROD_TEST_DIR}/unit/rod/resolve_framework/feature_query/instance_of.spec.cpp
 	${ROD_TEST_DIR}/unit/rod/resolve_framework/type_index_source.spec.cpp
+	${ROD_TEST_DIR}/unit/rod/source/hana_monad.spec.cpp
 	${ROD_TEST_DIR}/unit/rod/boost/hana_resolve_monad.spec.cpp
 	${ROD_TEST_DIR}/integration/rod/boost/hana_resolve.spec.cpp
+	${ROD_TEST_DIR}/integration/rod/feature/instance/instance_as.spec.cpp
 	${ROD_TEST_DIR}/integration/rod/resolve_framework/type_index_source_resolving.spec.cpp
-	${ROD_TEST_DIR}/functional/rod/resolve/resolve.api.spec.cpp
+	${ROD_TEST_DIR}/integration/rod/source/hana_tuple_resolving.spec.cpp
+	#${ROD_TEST_DIR}/functional/rod/resolve/resolve.api.spec.cpp
 )
 
 #if(NOT TARGET Catch)

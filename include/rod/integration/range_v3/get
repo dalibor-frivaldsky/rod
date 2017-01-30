@@ -1,0 +1,13 @@
+#pragma once
+
+#include <range/v3/core.hpp>
+
+
+namespace ranges { 
+
+	template< typename Range >
+	decltype(auto) get_impl( Range&& m ) {
+		return front(m);
+	}
+
+}

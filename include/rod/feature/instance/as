@@ -1,0 +1,34 @@
+#pragma once
+
+#include <type_traits>
+#include <utility>
+
+
+namespace rod {
+namespace feature {
+namespace query {
+
+	template< typename C, typename T >
+	void convert(T&& t);
+
+	template< typename C >
+	auto as = [] (auto&& resolver) -> decltype(auto) {
+		constexpr bool	bothReference = std::is_reference_v< C > && std::is_reference_v< decltype(resolver()) >;
+		constexpr bool	bothPointer = std::is_pointer_v< C > && std::is_pointer_v< decltype(resolver()) >;
+		constexpr bool	bothObject = std::is_object_v< C > && std::is_object_v< decltype(resolver()) >;
+
+		if constexpr(std::is_same_v< decltype(resolver()), C >) {
+			return resolver;
+		}
+		else if constexpr(
+			(bothReference || bothPointer || bothObject) &&
+			std::is_convertible_v< decltype(resolver()), C >
+		) {
+			return [=] () -> C { return resolver(); };
+		}
+		else if constexpr(!std::is_same_v< decltype(convert< C >(resolver())), void >) {
+			return [=] () -> C { return convert<C>(resolver()); };
+		}
+	};
+
+}}}
