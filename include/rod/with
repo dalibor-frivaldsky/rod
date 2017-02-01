@@ -2,9 +2,10 @@
 
 #include <boost/callable_traits.hpp>
 #include <rod/concept/Callable>
+#include <rod/feature/instance/instance>
+#include <rod/feature/instance/as>
 #include <rod/get>
 #include <rod/resolve>
-#include <rod/resolve_framework/feature_query/instance_of>
 #include <type_traits>
 #include <utility>
 
@@ -15,12 +16,15 @@ namespace rod {
 
 		template< typename... Args >
 		struct with_impl {
-
 			template< Callable Fn, typename Source >
 			static
 			auto call( Fn&& fn, Source&& source ) {
+				using namespace feature::query;
+				
 				return fn(
-					std::forward<Source>(source) | resolve(resolve_framework::instance_of< Args >) | get ...
+					std::get< 0 >(
+						std::forward<Source>(source) | resolve(instance{ as< Args > }) | get
+					)...
 				);
 			}
 

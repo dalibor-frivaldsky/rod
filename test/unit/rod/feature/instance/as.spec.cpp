@@ -12,9 +12,12 @@ struct Foo {};
 SCENARIO("querying for return type convertibility with 'as'", "[unit][feature][instance]") {
 
 	GIVEN("a resolver returning an int") {
-		auto intResolver = [] { return 10; };
+		auto intResolver = [&] { return 10; };
 
 		THEN("'as' returns the resolver when the type matches") {
+			BOOST_HANA_CONSTANT_CHECK(
+				type_c< decltype(as< int >(intResolver)()) > == type_c< int >
+			);
 			REQUIRE(&intResolver == &as< int >(intResolver));
 			REQUIRE(as< int >(intResolver)() == 10);
 		}
@@ -38,6 +41,9 @@ SCENARIO("querying for return type convertibility with 'as'", "[unit][feature][i
 		auto intRefResolver = [&] () -> int& { return i; };
 
 		THEN("'as' returns the resolver when requesting reference to int") {
+			BOOST_HANA_CONSTANT_CHECK(
+				type_c< decltype(as< int& >(intRefResolver)()) > == type_c< int& >
+			);
 			REQUIRE(&intRefResolver == &as< int& >(intRefResolver));
 			REQUIRE(as< int& >(intRefResolver)() == 10);
 		}

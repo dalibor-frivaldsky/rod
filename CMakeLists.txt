@@ -69,7 +69,7 @@ set(ROD_TEST_SOURCES
 	${ROD_TEST_DIR}/integration/rod/feature/instance/instance_as.spec.cpp
 	${ROD_TEST_DIR}/integration/rod/resolve_framework/type_index_source_resolving.spec.cpp
 	${ROD_TEST_DIR}/integration/rod/source/hana_tuple_resolving.spec.cpp
-	#${ROD_TEST_DIR}/functional/rod/resolve/resolve.api.spec.cpp
+	${ROD_TEST_DIR}/functional/rod/resolve/resolve.api.spec.cpp
 )
 
 #if(NOT TARGET Catch)

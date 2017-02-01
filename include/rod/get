@@ -1,13 +1,35 @@
 #pragma once
 
+#include <tuple>
 #include <type_traits>
 #include <utility>
 
 
 namespace rod {
+
+	namespace detail {
+
+		template< typename Tuple, std::size_t... I >
+		constexpr auto get_extract(Tuple&& tuple, std::index_sequence< I... >) {
+			return std::tuple<
+				decltype(std::get< I >(std::forward< Tuple >(tuple))())...
+			>{
+				std::get< I >(std::forward< Tuple >(tuple))()...
+			};
+		}
+
+	}
 	
-	auto get = [] (auto&& source) -> decltype(auto) {
-		return get_impl(std::forward<decltype(source)>(source))();
+	auto get = [] (auto&& source) {
+		constexpr std::size_t	entityCount =
+			std::tuple_size_v<
+				std::decay_t< decltype(get_impl(std::forward<decltype(source)>(source))) >
+			>;
+
+		return detail::get_extract(
+			get_impl(std::forward<decltype(source)>(source)),
+			std::make_index_sequence< entityCount >{}
+		);
 	};
 
 }

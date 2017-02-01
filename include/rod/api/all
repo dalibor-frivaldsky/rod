@@ -1,0 +1,12 @@
+#pragma once
+
+#include <rod/feature/instance/instance>
+#include <rod/feature/instance/as>
+#include <rod/get>
+#include <rod/integration/boost/hana_get>
+#include <rod/pipe>
+#include <rod/resolve>
+#include <rod/source/hana_monad>
+#include <rod/with>
+
+using namespace rod::operators;

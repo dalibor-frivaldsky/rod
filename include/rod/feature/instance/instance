@@ -17,12 +17,12 @@ namespace query {
 
 		using tag = instance_tag;
 
-		instance(Qs... qs):
-		  qs(qs...)
+		instance(Qs&&... qs):
+		  qs(std::forward< Qs >(qs)...)
 		{}
 
 		template< typename E >
-		constexpr auto operator() (E&& e) {
+		constexpr decltype(auto) operator() (E&& e) const {
 			if constexpr(std::is_callable_v< E(tag) >) {
 				if constexpr(sizeof...(Qs) == 1) {
 					return std::get< 0 >(qs)(e(tag{}));

@@ -1,13 +1,14 @@
 #include <boost/hana.hpp>
 #include <catch.hpp>
 #include <rod/feature/instance/instance>
+#include <utility>
 
 using namespace boost::hana;
 using namespace rod::feature::query;
 
 
 struct entity_with_int_instance_feature {
-	constexpr auto operator() (rod::feature::instance_tag&&) {
+	constexpr auto operator() (rod::feature::instance_tag&&) const {
 		return [] { return 10; };
 	}
 };
@@ -39,7 +40,7 @@ SCENARIO( "querying for an instance feature of an entity", "[unit][feature][inst
 
 struct subquery {
 	template< typename I >
-	constexpr decltype(auto) operator() (I&& i) {
+	constexpr decltype(auto) operator() (I&& i) const {
 		if constexpr( std::is_same_v< std::result_of_t< I() >, int > ) {
 			return [] { return 10.0; };
 		}

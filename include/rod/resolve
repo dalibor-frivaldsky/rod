@@ -24,13 +24,13 @@ namespace rod {
 	auto filter_entities(Entities&&, FQs&&...);
 
 	auto resolve = [] (auto&&... fqs) {
-		return [&fqs...] (auto&& source) {
+		return [fqs...] (auto&& source) {
 			return filter_entities(
 				query_entities(
 					std::forward< decltype(source) >(source),
-					std::forward< decltype(fqs) >(fqs)...
+					fqs...
 				),
-				std::forward< decltype(fqs) >(fqs)...
+				fqs...
 			);
 		};
 	};

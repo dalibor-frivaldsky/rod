@@ -19,12 +19,12 @@ namespace detail {
 	struct hana_tuple_entity {
 		InstanceResolver	instanceResolver;
 
-		constexpr hana_tuple_entity(InstanceResolver&& instanceResolver):
-		  instanceResolver(std::forward< InstanceResolver >(instanceResolver))
+		constexpr hana_tuple_entity(InstanceResolver instanceResolver):
+		  instanceResolver(std::move(instanceResolver))
 		{}
 
-		constexpr auto operator() (feature::instance_tag) {
-			return instanceResolver;;
+		constexpr const InstanceResolver& operator() (feature::instance_tag) const {
+			return instanceResolver;
 		}
 	};
 
@@ -40,9 +40,9 @@ namespace detail {
 	template< typename T >
 	constexpr auto generate_entities( T* v ) {
 		return boost::hana::tuple(
-			hana_tuple_entity{ [&] { return *v; } },
-			hana_tuple_entity{ [&] ()-> T& { return *v; } },
-			hana_tuple_entity{ [&] { return v; } }
+			hana_tuple_entity{ [=] { return *v; } },
+			hana_tuple_entity{ [=] ()-> T& { return *v; } },
+			hana_tuple_entity{ [=] { return v; } }
 		);
 	}
 
@@ -53,7 +53,7 @@ namespace boost {
 namespace hana {
 
 	template< rod::integration::hana_concept< Monad > Monad, typename... FQs >
-	constexpr auto query_entities(Monad&& monad, FQs&&... fqs) {
+	constexpr auto query_entities(Monad&& monad, FQs&&...) {
 		return monad | [] (auto&& v) {
 			return rod::source::detail::generate_entities(
 				std::forward< decltype(v) >(v)

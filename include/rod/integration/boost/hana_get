@@ -4,7 +4,8 @@
 #include <rod/boost/hana_concept>
 
 
-namespace boost{ namespace hana {
+namespace boost{
+namespace hana {
 	
 	template< rod::boost_detail::hana_concept< Monad > M >
 	decltype(auto) get_impl( M&& m ) {
