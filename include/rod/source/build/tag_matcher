@@ -1,0 +1,131 @@
+#pragma once
+
+#include <boost/hana/bool.hpp>
+#include <boost/hana/concat.hpp>
+#include <boost/hana/concept/monad.hpp>
+#include <boost/hana/equal.hpp>
+#include <boost/hana/filter.hpp>
+#include <boost/hana/greater_equal.hpp>
+#include <boost/hana/is_subset.hpp>
+#include <boost/hana/size.hpp>
+#include <boost/hana/transform.hpp>
+#include <boost/hana/tuple.hpp>
+#include <boost/hana/unpack.hpp>
+#include <range/v3/core.hpp>
+#include <range/v3/view/concat.hpp>
+#include <range/v3/view/transform.hpp>
+#include <rod/integration/boost/hana_concept>
+#include <type_traits>
+#include <utility>
+
+
+namespace rod {
+namespace source {
+namespace build {
+
+	template< typename Rs >
+	struct tag_matcher_query_result {
+
+		using	Ranges = Rs;
+		Ranges	ranges;
+
+		tag_matcher_query_result(Ranges&& ranges):
+		  ranges(std::forward< Ranges >(ranges))
+		{}
+
+	};
+
+	template< typename Result >
+	concept bool TagMatcherQueryResult() {
+		return std::is_same_v<
+			std::decay_t< Result >,
+			tag_matcher_query_result< typename std::decay_t< Result >::Ranges >
+		>;
+	}
+
+	template< typename... Cases >
+	struct tag_matcher {
+
+		constexpr tag_matcher(Cases&&... cases):
+		  cases(std::forward< Cases >(cases)...)
+		{}
+
+		template< typename... FQs >
+		constexpr auto operator() (FQs&&...) const {
+			using namespace boost::hana;
+
+			return tag_matcher_query_result{
+				transform(
+					filter(
+						cases,
+						[] (auto&& match_case) {
+							constexpr auto fqTags = tuple{ type_c< typename std::decay_t< FQs >::tag >... };
+
+							using caseTags = typename std::decay_t< decltype(match_case) >::tags;
+							constexpr auto caseTagTypes = transform(
+								caseTags{},
+								[] (auto&& tag) { return type_c< std::decay_t< decltype(tag) > >; }
+							);
+							
+							return is_subset(fqTags, caseTagTypes);
+						}
+					),
+					[] (auto&& match_case) {
+						return match_case();
+					}
+				)
+			};
+		}
+
+	private:
+		boost::hana::tuple< Cases... >	cases;
+
+	};
+
+	template< typename Tags, typename Generator >
+	struct tag_matcher_case {
+
+		using		tags = Tags;
+
+		constexpr tag_matcher_case(Tags&&, Generator&& generator):
+		  generator(std::forward< Generator >(generator))
+		{}
+
+		auto operator() () const {
+			return generator();
+		}
+
+	private:
+		Generator	generator;
+
+	};
+
+}}}
+
+
+namespace boost {
+namespace hana {
+
+	template< rod::source::build::TagMatcherQueryResult Result, typename... FQs >
+	auto filter_entities(Result&& result, FQs&&... fqs) {
+		return unpack(
+			transform(
+				result.ranges,
+				[&] (auto&& entityBatch) {
+					return entityBatch
+					| ranges::view::transform([&] (auto&& entity) {
+						return std::tuple{
+							fqs(entity)...
+						};
+					});
+				}
+			),
+			[] (auto&&... entityStreams) {
+				return ranges::view::concat(
+					std::forward< decltype(entityStreams) >(entityStreams)...
+				);
+			}
+		);
+	}
+
+}}

@@ -1,0 +1,37 @@
+#pragma once
+
+#include <utility>
+
+
+namespace rod {
+namespace source {
+namespace build {
+
+	template< typename... Providers >
+	struct entity: Providers... {
+
+		using Providers::operator()...;
+
+		constexpr entity(Providers&&... providers):
+		  Providers(std::forward< Providers >(providers))...
+		{}
+
+	};
+
+	template< typename Tag, typename Resolver >
+	struct feature_provider {
+
+		constexpr feature_provider(Tag&&, Resolver&& resolver):
+		  resolver(std::forward< Resolver >(resolver))
+		{}
+
+		constexpr const Resolver& operator() (Tag&&) const {
+			return resolver;
+		}
+
+	private:
+		Resolver	resolver;
+
+	};
+
+}}}

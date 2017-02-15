@@ -1,5 +1,5 @@
 playground
-build
+/build
 test/**/*.obj
 test/**/*.out
 test/**/*.exe
