@@ -6,17 +6,6 @@
 
 namespace rod {
 
-	namespace detail {
-
-		template< typename... FQs >
-		constexpr auto deduce_tags(FQs&&...) {
-			return boost::hana::tuple{
-				boost::hana::type_c< typename FQs::tag >...
-			};
-		}
-
-	}
-
 	template< typename Source, typename... FQs >
 	auto query_entities(Source&&, FQs&&...);
 
