@@ -6,6 +6,7 @@
 #include <boost/hana/tuple.hpp>
 #include <rod/feature/instance/instance_tag>
 #include <rod/integration/boost/hana_concept>
+#include <rod/source/build/entity>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -15,34 +16,51 @@ namespace rod {
 namespace source {
 namespace detail {
 
-	template< typename InstanceResolver >
-	struct hana_tuple_entity {
-		InstanceResolver	instanceResolver;
-
-		constexpr hana_tuple_entity(InstanceResolver instanceResolver):
-		  instanceResolver(std::move(instanceResolver))
-		{}
-
-		constexpr const InstanceResolver& operator() (feature::instance_tag) const {
-			return instanceResolver;
-		}
-	};
-
 	template< typename T >
 	constexpr auto generate_entities( T& v ) {
 		return boost::hana::tuple(
-			hana_tuple_entity{ [&] { return v; } },
-			hana_tuple_entity{ [&] ()-> T& { return v; } },
-			hana_tuple_entity{ [&] { return &v; } }
+			build::entity{
+				build::feature_provider{
+					feature::instance_tag{},
+					[&] { return v; }
+				}
+			},
+			build::entity{
+				build::feature_provider{
+					feature::instance_tag{},
+					[&] ()-> T& { return v; }
+				}
+			},
+			build::entity{
+				build::feature_provider{
+					feature::instance_tag{},
+					[&] { return &v; }
+				}
+			}
 		);
 	}
 
 	template< typename T >
 	constexpr auto generate_entities( T* v ) {
 		return boost::hana::tuple(
-			hana_tuple_entity{ [=] { return *v; } },
-			hana_tuple_entity{ [=] ()-> T& { return *v; } },
-			hana_tuple_entity{ [=] { return v; } }
+			build::entity{
+				build::feature_provider{
+					feature::instance_tag{},
+					[=] { return *v; }
+				}
+			},
+			build::entity{
+				build::feature_provider{
+					feature::instance_tag{},
+					[=] ()-> T& { return *v; }
+				}
+			},
+			build::entity{
+				build::feature_provider{
+					feature::instance_tag{},
+					[=] { return v; }
+				}
+			}
 		);
 	}
 

@@ -2,8 +2,10 @@
 
 #include <rod/feature/instance/instance>
 #include <rod/feature/instance/as>
+#include <rod/erase>
 #include <rod/get>
 #include <rod/integration/boost/hana_get>
+#include <rod/integration/range_v3/get>
 #include <rod/pipe>
 #include <rod/resolve>
 #include <rod/source/hana_monad>

@@ -1,0 +1,140 @@
+#pragma once
+
+#include <any>
+#include <boost/callable_traits.hpp>
+#include <functional>
+#include <map>
+#include <range/v3/core.hpp>
+#include <range/v3/iterator_range.hpp>
+#include <range/v3/view/transform.hpp>
+#include <rod/concept/Resolver>
+#include <rod/feature/instance/instance_tag>
+#include <rod/source/build/entity>
+#include <rod/source/build/tag_matcher>
+#include <rod/source/build/with_query>
+#include <typeindex>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+
+namespace rod {
+namespace source {
+
+	class type_index {
+
+	private:
+		using ResolverMap = std::multimap< std::type_index, std::any >;
+
+		ResolverMap	resolver_map;
+
+	public:
+		template< Resolver R >
+		void register_resolver( R&& resolver ) {
+			using FnWrapper = std::function<
+				boost::callable_traits::return_type_t< std::decay_t< R > >()
+			>;
+
+			resolver_map.emplace(
+				std::type_index(typeid(FnWrapper)),
+				std::any{ FnWrapper{ std::forward< R >(resolver) } }
+			);
+		}
+
+		inline
+		const ResolverMap&
+		get_all_resolvers() const {
+			return resolver_map;
+		}
+
+	};
+
+
+	namespace detail {
+
+		struct convertible_to_any {};
+
+		template< typename C >
+		C convert(convertible_to_any);
+
+		auto any_resolver = [] { return convertible_to_any{}; };
+
+		inline
+		auto provide_all_as_any(const type_index& source) {
+			return source.get_all_resolvers() 
+			| ranges::view::transform([] (auto&& resolverPair) {
+				return build::entity{
+					build::feature_provider{
+						feature::instance_tag{},
+						[&] { return resolverPair.second; }
+					}
+				};
+			});
+		}
+
+		template< typename ExpectedType >
+		auto query_by_type(const type_index& source) {
+			using ResolverType = std::function< ExpectedType() >;
+			auto resolversRangeIt = source.get_all_resolvers().equal_range(
+				std::type_index(typeid(ResolverType))
+			);
+
+			return ranges::iterator_range(
+				resolversRangeIt.first,
+				resolversRangeIt.second
+			) | ranges::view::transform([] (auto&& resolverIt) {
+				return build::entity{
+					build::feature_provider{
+						feature::instance_tag{},
+						std::any_cast< ResolverType >(resolverIt.second)
+					}
+				};
+			});
+		}
+
+	}
+
+
+	template< typename... FQs >
+	auto query_entities(type_index& source, FQs&&... fqs) {
+		using namespace boost;
+
+		const auto matcher = build::tag_matcher{
+			build::tag_matcher_case{
+				hana::tuple{
+					feature::instance_tag{}
+				},
+				[&] {
+					return build::with_query< feature::instance_tag >(
+						[&] (auto&& instanceQuery) {
+							using ExpectedType = decltype(
+								instanceQuery(
+									build::entity{
+										build::feature_provider{
+											feature::instance_tag{},
+											std::move(detail::any_resolver)
+										}
+									}
+								)()	
+							);
+
+							if constexpr(hana::type_c< detail::convertible_to_any > == hana::type_c< ExpectedType >) {
+								return detail::provide_all_as_any(source);
+							}
+							else {
+								return detail::query_by_type< ExpectedType >(source);
+							}
+						},
+						[&] {
+							return detail::provide_all_as_any(source);
+						},
+						std::move(fqs)...
+					);
+				}
+			}
+		};
+
+		return matcher(std::forward< FQs >(fqs)...);
+	}
+
+}}

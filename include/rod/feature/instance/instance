@@ -37,5 +37,8 @@ namespace query {
 		std::tuple< Qs... >	qs;
 
 	};
+
+	template< typename... Q >
+	instance(Q&&...) -> instance< Q... >;
 	
 }}}

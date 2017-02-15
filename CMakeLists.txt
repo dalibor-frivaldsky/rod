@@ -61,14 +61,14 @@ set(ROD_TEST_SOURCES
 	${ROD_TEST_DIR}/unit/rod/feature/instance/as.spec.cpp
 	${ROD_TEST_DIR}/unit/rod/pipe.spec.cpp
 	${ROD_TEST_DIR}/unit/rod/resolve.spec.cpp
-	${ROD_TEST_DIR}/unit/rod/resolve_framework/feature_query/instance_of.spec.cpp
-	${ROD_TEST_DIR}/unit/rod/resolve_framework/type_index_source.spec.cpp
+	${ROD_TEST_DIR}/unit/rod/source/build/entity.spec.cpp
+	${ROD_TEST_DIR}/unit/rod/source/build/tag_matcher.spec.cpp
+	${ROD_TEST_DIR}/unit/rod/source/build/with_query.spec.cpp
 	${ROD_TEST_DIR}/unit/rod/source/hana_monad.spec.cpp
-	${ROD_TEST_DIR}/unit/rod/boost/hana_resolve_monad.spec.cpp
-	${ROD_TEST_DIR}/integration/rod/boost/hana_resolve.spec.cpp
+	${ROD_TEST_DIR}/unit/rod/source/type_index.spec.cpp
 	${ROD_TEST_DIR}/integration/rod/feature/instance/instance_as.spec.cpp
-	${ROD_TEST_DIR}/integration/rod/resolve_framework/type_index_source_resolving.spec.cpp
 	${ROD_TEST_DIR}/integration/rod/source/hana_tuple_resolving.spec.cpp
+	${ROD_TEST_DIR}/integration/rod/source/type_index_resolving.spec.cpp
 	${ROD_TEST_DIR}/functional/rod/resolve/resolve.api.spec.cpp
 )
 
@@ -88,7 +88,6 @@ set(ROD_TEST_SOURCES
 	add_library(Catch INTERFACE)
 	add_dependencies(Catch INTERFACE Catch-External)
 	target_include_directories(Catch INTERFACE ${CMAKE_BINARY_DIR}/external/Catch/include)
-
 #endif()
 
 add_executable(rod-test ${ROD_TEST_SOURCES})
