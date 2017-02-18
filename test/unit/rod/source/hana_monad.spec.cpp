@@ -7,6 +7,12 @@ using namespace boost::hana;
 using namespace rod;
 
 
+SCENARIO("HanaType is a concept modeling boost::hana::type") {
+	static_assert(!source::detail::HanaType< int >());
+	static_assert(source::detail::HanaType< type< int > >());
+	static_assert(source::detail::HanaType< type< int >& >());
+}
+
 template< typename feature_tag >
 auto allResolvers = [] (auto& entities) {
 	return fold(
@@ -37,14 +43,19 @@ SCENARIO( "Generating entities", "[unit][source][hana_tuple]" ) {
 		int&	refA = a;
 
 		WHEN( "entities are generated" ) {
-			auto entities = source::detail::generate_entities( refA );
+			auto entities = source::detail::entity_generator< int& >::generate( refA );
 
-			THEN( "they all provide resolvers of an instance feature" ) {
+			THEN( "they all provide resolvers of an instance and type feature" ) {
 				BOOST_HANA_CONSTANT_CHECK( allResolvers< feature::instance_tag >( entities ) );
+				BOOST_HANA_CONSTANT_CHECK( allResolvers< feature::type_tag >( entities ) );
 			}
 
-			AND_THEN( "they resolve T, T&, T*" ) {
+			AND_THEN( "they resolve instances of T, T&, T*" ) {
 				BOOST_HANA_CONSTANT_CHECK( resolvableTypes< feature::instance_tag, int, int&, int* >( entities ) );
+			}
+
+			AND_THEN( "they resolve type T" ) {
+				BOOST_HANA_CONSTANT_CHECK( resolvableTypes< feature::type_tag, type<int>, type<int>, type<int> >( entities ) );
 			}
 		}
 	}
@@ -54,14 +65,35 @@ SCENARIO( "Generating entities", "[unit][source][hana_tuple]" ) {
 		int*	ptrA = &a;
 
 		WHEN( "entities are generated" ) {
-			auto entities = source::detail::generate_entities( ptrA );
+			auto entities = source::detail::entity_generator< int*& >::generate( ptrA );
 
-			THEN( "they all provide resolvers of an instance feature" ) {
+			THEN( "they all provide resolvers of an instance and type feature" ) {
 				BOOST_HANA_CONSTANT_CHECK( allResolvers< feature::instance_tag >( entities ) );
+				BOOST_HANA_CONSTANT_CHECK( allResolvers< feature::type_tag >( entities ) );
 			}
 
 			AND_THEN( "they resolve T, T&, T*" ) {
 				BOOST_HANA_CONSTANT_CHECK( resolvableTypes< feature::instance_tag, int, int&, int* >( entities ) );
+			}
+
+			AND_THEN( "they resolve type T" ) {
+				BOOST_HANA_CONSTANT_CHECK( resolvableTypes< feature::type_tag, type<int>, type<int>, type<int> >( entities ) );
+			}
+		}
+	}
+
+	GIVEN( "type_c<T>" ) {
+		auto intType = type_c< int >;
+
+		WHEN( "entities are generated" ) {
+			auto entities = source::detail::entity_generator< basic_type< int > >::generate(intType);
+			
+			THEN( "they all provide resolvers of a type feature" ) {
+				BOOST_HANA_CONSTANT_CHECK( allResolvers< feature::type_tag >( entities ) );
+			}
+
+			AND_THEN( "they resolve type T" ) {
+				BOOST_HANA_CONSTANT_CHECK( resolvableTypes< feature::type_tag, type<int> >( entities ) );
 			}
 		}
 	}

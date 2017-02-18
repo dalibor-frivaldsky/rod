@@ -4,7 +4,9 @@
 #include <boost/hana/filter.hpp>
 #include <boost/hana/transform.hpp>
 #include <boost/hana/tuple.hpp>
+#include <boost/hana/type.hpp>
 #include <rod/feature/instance/instance_tag>
+#include <rod/feature/type/type_tag>
 #include <rod/integration/boost/hana_concept>
 #include <rod/source/build/entity>
 #include <tuple>
@@ -17,52 +19,107 @@ namespace source {
 namespace detail {
 
 	template< typename T >
-	constexpr auto generate_entities( T& v ) {
-		return boost::hana::tuple(
-			build::entity{
-				build::feature_provider{
-					feature::instance_tag{},
-					[&] { return v; }
-				}
-			},
-			build::entity{
-				build::feature_provider{
-					feature::instance_tag{},
-					[&] ()-> T& { return v; }
-				}
-			},
-			build::entity{
-				build::feature_provider{
-					feature::instance_tag{},
-					[&] { return &v; }
-				}
-			}
-		);
+	concept bool HanaType() {
+		return (bool)(boost::hana::type_c< typename std::decay_t< T >::type >
+			==
+		std::decay_t< T >{});
 	}
 
 	template< typename T >
-	constexpr auto generate_entities( T* v ) {
-		return boost::hana::tuple(
-			build::entity{
-				build::feature_provider{
-					feature::instance_tag{},
-					[=] { return *v; }
+	struct entity_generator;
+
+	template< typename T >
+	struct entity_generator< boost::hana::basic_type< T > > {
+		static
+		constexpr auto generate(boost::hana::type< T > v) {
+			return boost::hana::tuple(
+				build::entity{
+					build::feature_provider{
+						feature::type_tag{},
+						[] { return boost::hana::type_c< T >; }
+					}
 				}
-			},
-			build::entity{
-				build::feature_provider{
-					feature::instance_tag{},
-					[=] ()-> T& { return *v; }
+			);
+		}
+	};
+
+	template< typename T >
+	struct entity_generator< T& > {
+		static
+		constexpr auto generate(T& v) {
+			return boost::hana::tuple(
+				build::entity{
+					build::feature_provider{
+						feature::instance_tag{},
+						[&] { return v; }
+					},
+					build::feature_provider{
+						feature::type_tag{},
+						[] { return boost::hana::type_c< T >; }
+					}
+				},
+				build::entity{
+					build::feature_provider{
+						feature::instance_tag{},
+						[&] ()-> T& { return v; }
+					},
+					build::feature_provider{
+						feature::type_tag{},
+						[] { return boost::hana::type_c< T >; }
+					}
+				},
+				build::entity{
+					build::feature_provider{
+						feature::instance_tag{},
+						[&] { return &v; }
+					},
+					build::feature_provider{
+						feature::type_tag{},
+						[] { return boost::hana::type_c< T >; }
+					}
 				}
-			},
-			build::entity{
-				build::feature_provider{
-					feature::instance_tag{},
-					[=] { return v; }
+			);
+		}
+	};
+
+	template< typename T >
+	struct entity_generator< T*& > {
+		static
+		constexpr auto generate(T*& v) {
+			return boost::hana::tuple(
+				build::entity{
+					build::feature_provider{
+						feature::instance_tag{},
+						[=] { return *v; }
+					},
+					build::feature_provider{
+						feature::type_tag{},
+						[] { return boost::hana::type_c< T >; }
+					}
+				},
+				build::entity{
+					build::feature_provider{
+						feature::instance_tag{},
+						[=] ()-> T& { return *v; }
+					},
+					build::feature_provider{
+						feature::type_tag{},
+						[] { return boost::hana::type_c< T >; }
+					}
+				},
+				build::entity{
+					build::feature_provider{
+						feature::instance_tag{},
+						[=] { return v; }
+					},
+					build::feature_provider{
+						feature::type_tag{},
+						[] { return boost::hana::type_c< T >; }
+					}
 				}
-			}
-		);
-	}
+			);
+		}
+	};
 
 }}}
 
@@ -73,9 +130,18 @@ namespace hana {
 	template< rod::integration::hana_concept< Monad > Monad, typename... FQs >
 	constexpr auto query_entities(Monad&& monad, FQs&&...) {
 		return monad | [] (auto&& v) {
-			return rod::source::detail::generate_entities(
-				std::forward< decltype(v) >(v)
-			);
+			if constexpr(rod::source::detail::HanaType< decltype(v) >()) {
+				return rod::source::detail::entity_generator<
+					boost::hana::basic_type< typename std::decay_t< decltype(v) >::type >
+				>::generate(
+					std::forward< decltype(v) >(v)
+				);
+			}
+			else {
+				return rod::source::detail::entity_generator< decltype(v) >::generate(
+					std::forward< decltype(v) >(v)
+				);
+			}
 		};
 	}
 

@@ -1,3 +1,6 @@
+#include <boost/hana/assert.hpp>
+#include <boost/hana/equal.hpp>
+#include <boost/hana/unique.hpp>
 #include <catch.hpp>
 #include <rod/api/all>
 
@@ -5,7 +8,7 @@ namespace hana = boost::hana;
 namespace q = rod::feature::query;
 
 
-SCENARIO( "resolve API" ) {
+SCENARIO( "resolve API", "[functional]" ) {
 
 	auto tuple = hana::tuple{ 10, 5.0f, 2.5 };
 	auto [intValue] = tuple | rod::resolve(q::instance{ q::as< int > }) | rod::get;
@@ -23,7 +26,7 @@ SCENARIO( "resolve API" ) {
 
 }
 
-SCENARIO( "type-erased resolve API" ) {
+SCENARIO( "type-erased resolve API", "[functional]" ) {
 
 	auto tuple = hana::tuple( 10, 5.0f, 2.5 );
 	rod::source::type_index	source = tuple | rod::erase;
@@ -41,4 +44,89 @@ SCENARIO( "type-erased resolve API" ) {
 		REQUIRE( *c == 2.5 );
 	});
 
+}
+
+
+struct Foo {};
+
+struct Bar {};
+
+struct Baz {};
+
+struct Bazz: public Baz {};
+
+SCENARIO("type resolve API", "[functional]") {
+	auto tuple = hana::tuple{ Foo{}, hana::type_c< Bar >, hana::type_c< Bazz > };
+
+	BOOST_HANA_CONSTANT_CHECK(
+		hana::unique(
+			hana::transform(
+				tuple | rod::resolve(q::type{}) | rod::get_all,
+				[] (auto&& e) {
+					return std::get< 0 >(e);
+				}
+			)
+		)
+			==
+		hana::tuple{ hana::type_c< Foo >, hana::type_c< Bar >, hana::type_c< Bazz > }
+	);
+
+	auto [fooType] = tuple | rod::resolve(q::type{ q::is< Foo >}) | rod::get;
+	BOOST_HANA_CONSTANT_CHECK( fooType == hana::type_c< Foo > );
+
+	auto [bazBaseType] = tuple | rod::resolve(q::type{ q::base_of< Baz >}) | rod::get;
+	BOOST_HANA_CONSTANT_CHECK( bazBaseType == hana::type_c< Bazz > );
+}
+
+
+struct BaseA {
+	virtual int operator() () = 0;
+};
+
+struct BaseB {
+	virtual double operator() () = 0;
+};
+
+struct DerivedAA: BaseA {
+	int operator() () {
+		return 10;
+	}
+};
+
+struct DerivedBA: BaseA {
+	int operator() () {
+		return 20;
+	}
+};
+
+struct DerivedAB: BaseB {
+	double operator() () {
+		return 2.5;
+	}
+};
+
+SCENARIO("Object hierarchy resolve API", "[functional]") {
+	auto tuple = hana::tuple{ DerivedAA{}, DerivedAB{}, DerivedBA{} };
+
+	auto [b] = tuple | rod::resolve(q::instance{ q::as< BaseB* > }) | rod::get;
+	static_assert(std::is_same_v< decltype(b), BaseB* >);
+	REQUIRE( (*b)() == 2.5 );
+
+	auto [b2, bType] = tuple
+		| rod::resolve(
+			q::instance{ q::as< BaseB* > },
+			q::type{})
+		| rod::get;
+	BOOST_HANA_CONSTANT_CHECK( bType == hana::type_c< DerivedAB > );
+
+	auto [a, aType] = tuple
+		| rod::resolve(
+			q::instance{ q::as< BaseA* > },
+			q::type{ q::is< DerivedBA > })
+		| rod::get;
+	REQUIRE( (*a)() == 20 );
+
+	tuple | rod::with([] (BaseB& b) {
+		REQUIRE( b() == 2.5 );
+	});
 }

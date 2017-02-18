@@ -1,0 +1,9 @@
+#pragma once
+
+
+namespace rod {
+namespace feature {
+
+	struct type_tag {};	
+
+}}

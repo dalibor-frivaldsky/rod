@@ -40,7 +40,7 @@ SCENARIO( "querying for an instance feature of an entity", "[unit][feature][inst
 
 struct subquery {
 	template< typename I >
-	constexpr decltype(auto) operator() (I&& i) const {
+	constexpr decltype(auto) operator() (I&&) const {
 		if constexpr( std::is_same_v< std::result_of_t< I() >, int > ) {
 			return [] { return 10.0; };
 		}

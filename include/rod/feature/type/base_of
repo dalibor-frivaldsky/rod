@@ -1,0 +1,22 @@
+#pragma once
+
+#include <boost/hana/equal.hpp>
+#include <boost/hana/type.hpp>
+#include <type_traits>
+
+
+namespace rod {
+namespace feature {
+namespace query {
+
+	template< typename T >
+	auto base_of = [] (auto&& resolver) -> decltype(auto) {
+		if constexpr(
+			std::is_base_of_v< T, typename decltype(resolver())::type >
+			&& !std::is_same_v< T, typename decltype(resolver())::type >
+		) {
+			return resolver;
+		}
+	};
+
+}}}

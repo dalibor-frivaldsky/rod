@@ -1,0 +1,44 @@
+#pragma once
+
+#include <rod/feature/type/type_tag>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+
+
+namespace rod {
+namespace feature {
+namespace query {
+
+	template< typename... Qs >
+	struct type {
+
+		static_assert(sizeof...(Qs) <= 1, "type query accepts up to one subquery");
+
+		using tag = type_tag;
+
+		type(Qs&&... qs):
+		  qs(std::forward< Qs >(qs)...)
+		{}
+
+		template< typename E >
+		constexpr decltype(auto) operator() (E&& e) const {
+			if constexpr(std::is_callable_v< E(tag) >) {
+				if constexpr(sizeof...(Qs) == 1) {
+					return std::get< 0 >(qs)(e(tag{}));
+				}
+				else {
+					return e(tag{});
+				}
+			}
+		}
+
+	private:
+		std::tuple< Qs... >	qs;
+
+	};
+
+	template< typename... Q >
+	type(Q&&...) -> type< Q... >;
+	
+}}}

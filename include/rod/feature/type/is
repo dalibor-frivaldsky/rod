@@ -1,0 +1,18 @@
+#pragma once
+
+#include <boost/hana/equal.hpp>
+#include <boost/hana/type.hpp>
+
+
+namespace rod {
+namespace feature {
+namespace query {
+
+	template< typename C >
+	auto is = [] (auto&& resolver) -> decltype(auto) {
+		if constexpr(resolver() == boost::hana::type_c< C >) {
+			return resolver;
+		}
+	};
+
+}}}

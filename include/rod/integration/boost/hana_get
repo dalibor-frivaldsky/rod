@@ -1,15 +1,25 @@
 #pragma once
 
-#include <boost/hana.hpp>
+#include <boost/hana/front.hpp>
+#include <boost/hana/transform.hpp>
 #include <rod/integration/boost/hana_concept>
+#include <utility>
 
 
 namespace boost{
 namespace hana {
 	
 	template< rod::integration::hana_concept< Monad > M >
-	decltype(auto) get_impl( M&& m ) {
-		return front(m);
+	decltype(auto) get_impl(M&& m) {
+		return front(std::forward< M >(m));
+	}
+
+	template< rod::integration::hana_concept< Monad >M, typename C >
+	auto get_all_impl(M&& m, C&& c) {
+		return transform(
+			std::forward< M >(m),
+			std::forward< C >(c)
+		);
 	}
 
 }}

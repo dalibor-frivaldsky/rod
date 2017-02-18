@@ -32,4 +32,19 @@ namespace rod {
 		);
 	};
 
+	auto get_all = [] (auto&& source) {
+		return get_all_impl(
+			std::forward< decltype(source) >(source),
+			[] (auto&& e) {
+				constexpr std::size_t	entityCount =
+					std::tuple_size_v< std::decay_t< decltype(e) > >;
+
+				return detail::get_extract(
+					std::forward< decltype(e) >(e),
+					std::make_index_sequence< entityCount >{}
+				);
+			}
+		);
+	};
+
 }
