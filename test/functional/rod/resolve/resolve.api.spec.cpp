@@ -136,7 +136,7 @@ SCENARIO("Object hierarchy resolve API", "[functional]") {
 	});
 }
 
-SCENARIO("Object hierarchy type-erased resolve API", "[functional][test]") {
+SCENARIO("Object hierarchy type-erased resolve API", "[functional]") {
 	auto tuple = hana::tuple{ DerivedAA{}, DerivedAB{}, DerivedBA{}, hana::type_c< BaseB >, hana::type_c< BaseA > };
 	rod::source::type_index	source = tuple | rod::erase;
 
