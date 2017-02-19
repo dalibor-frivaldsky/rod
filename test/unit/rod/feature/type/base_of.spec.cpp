@@ -13,17 +13,17 @@ struct Bar: Foo {};
 
 struct Baz {};
 
-SCENARIO("querying for base type with 'base_of'", "[unit][feature][type]") {
+SCENARIO("querying type by it being a base of other type with 'base_of'", "[unit][feature][type]") {
 
 	GIVEN("A resolver returning a Bar type") {
-		auto resolver = [] { return type_c< Bar >; };
+		auto resolver = [] { return type_c< Foo >; };
 
-		THEN("'base_of' returns the resolver if the queried type is base of the resolved type") {
-			BOOST_HANA_CONSTANT_CHECK( base_of< Foo >(resolver)() == type_c< Bar > );
+		THEN("'base_of' returns the resolver if the resolved type is base of the queried type") {
+			BOOST_HANA_CONSTANT_CHECK( base_of< Bar >(resolver)() == type_c< Foo > );
 		}
 
-		AND_THEN("'base_of' returns void if the queried type is not base of the resolved type") {
-			static_assert(std::is_same_v< decltype(base_of< Bar >(resolver)), void >);
+		AND_THEN("'base_of' returns void if the resolved type is not base of the queried type") {
+			static_assert(std::is_same_v< decltype(base_of< Foo >(resolver)), void >);
 			static_assert(std::is_same_v< decltype(base_of< Baz >(resolver)), void >);
 		}
 	}

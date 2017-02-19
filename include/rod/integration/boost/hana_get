@@ -14,7 +14,7 @@ namespace hana {
 		return front(std::forward< M >(m));
 	}
 
-	template< rod::integration::hana_concept< Monad >M, typename C >
+	template< rod::integration::hana_concept< Monad > M, typename C >
 	auto get_all_impl(M&& m, C&& c) {
 		return transform(
 			std::forward< M >(m),

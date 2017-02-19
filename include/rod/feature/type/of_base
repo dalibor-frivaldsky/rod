@@ -10,10 +10,10 @@ namespace feature {
 namespace query {
 
 	template< typename T >
-	auto base_of = [] (auto&& resolver) -> decltype(auto) {
+	auto of_base = [] (auto&& resolver) -> decltype(auto) {
 		if constexpr(
-			std::is_base_of_v< typename decltype(resolver())::type, T >
-			&& !std::is_same_v< typename decltype(resolver())::type, T >
+			std::is_base_of_v< T, typename decltype(resolver())::type >
+			&& !std::is_same_v< T, typename decltype(resolver())::type >
 		) {
 			return resolver;
 		}

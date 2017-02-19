@@ -2,23 +2,79 @@
 
 
 #include <boost/hana/for_each.hpp>
+#include <boost/hana/transform.hpp>
+#include <boost/hana/unique.hpp>
 #include <rod/get>
 #include <rod/feature/instance/instance>
+#include <rod/feature/type/type>
+#include <rod/feature/type/base_of>
 #include <rod/resolve>
 #include <rod/source/hana_monad>
 #include <rod/source/type_index>
+#include <type_traits>
 #include <utility>
 
 
 namespace rod {
 
+	namespace detail {
+
+		template< typename T, template< typename > typename Target, typename Source, typename Resolver >
+		void add_base_resolvers(source::type_index& erasedSource, Source&& source, Resolver&& resolver) {
+			namespace hana = boost::hana;
+			using namespace feature::query;
+
+			auto baseTs = hana::unique(
+				hana::transform(
+					source | resolve(type{ base_of< T >}) | rod::get_all,
+					[] (auto&& e) {
+						return std::get< 0 >(e);
+					}
+				)
+			);
+			hana::for_each(
+				baseTs,
+				[&] (auto baseT) {
+					using BaseTTarget = typename Target< typename decltype(baseT)::type >::type;
+					erasedSource.register_resolver(
+						[=] () -> BaseTTarget { return resolver(); }
+					);
+				});
+		}
+
+	}
+
 	auto erase = [] (auto&& source) {
+		namespace hana = boost::hana;
+		using namespace feature::query;
+
 		source::type_index	erasedSource{};
 
-		boost::hana::for_each(
-			source | resolve(feature::query::instance{}),
-			[&] (auto&& resolver) {
-				erasedSource.register_resolver(std::get<0>(resolver));
+		hana::for_each(
+			source | resolve(instance{}),
+			[&] (auto&& resolverTuple) {
+				auto resolver = std::get<0>(resolverTuple);
+				erasedSource.register_resolver(resolver);
+
+				using R = decltype(resolver());
+				if constexpr(std::is_pointer_v< R >) {
+					using T = std::remove_pointer_t< R >;
+
+					detail::add_base_resolvers< T, std::add_pointer >(
+						erasedSource,
+						source,
+						resolver
+					);
+				}
+				if constexpr(std::is_reference_v< R >) {
+					using T = std::remove_reference_t< R >;
+
+					detail::add_base_resolvers< T, std::add_lvalue_reference >(
+						erasedSource,
+						source,
+						resolver
+					);
+				}
 			}
 		);
 		

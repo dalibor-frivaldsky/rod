@@ -1,13 +1,19 @@
 #pragma once
 
 #include <range/v3/core.hpp>
+#include <range/v3/view/transform.hpp>
 
 
 namespace ranges { 
 
 	template< typename Range >
-	decltype(auto) get_impl( Range&& m ) {
-		return front(m);
+	decltype(auto) get_impl(Range&& rng) {
+		return front(rng);
+	}
+
+	template< typename Range, typename C >
+	auto get_all_impl(Range&& rng, C&& c) {
+		return rng | view::transform(std::forward< C >(c));
 	}
 
 }

@@ -2,6 +2,7 @@
 #include <boost/hana/equal.hpp>
 #include <boost/hana/unique.hpp>
 #include <catch.hpp>
+#include <range/v3/view/for_each.hpp>
 #include <rod/api/all>
 
 namespace hana = boost::hana;
@@ -67,15 +68,15 @@ SCENARIO("type resolve API", "[functional]") {
 				}
 			)
 		)
-			==
+		==
 		hana::tuple{ hana::type_c< Foo >, hana::type_c< Bar >, hana::type_c< Bazz > }
 	);
 
 	auto [fooType] = tuple | rod::resolve(q::type{ q::is< Foo >}) | rod::get;
 	BOOST_HANA_CONSTANT_CHECK( fooType == hana::type_c< Foo > );
 
-	auto [bazBaseType] = tuple | rod::resolve(q::type{ q::base_of< Baz >}) | rod::get;
-	BOOST_HANA_CONSTANT_CHECK( bazBaseType == hana::type_c< Bazz > );
+	auto [ofBazBaseType] = tuple | rod::resolve(q::type{ q::of_base< Baz >}) | rod::get;
+	BOOST_HANA_CONSTANT_CHECK( ofBazBaseType == hana::type_c< Bazz > );
 }
 
 
@@ -129,4 +130,29 @@ SCENARIO("Object hierarchy resolve API", "[functional]") {
 	tuple | rod::with([] (BaseB& b) {
 		REQUIRE( b() == 2.5 );
 	});
+}
+
+SCENARIO("Object hierarchy type-erased resolve API", "[functional][test]") {
+	auto tuple = hana::tuple{ DerivedAA{}, DerivedAB{}, DerivedBA{}, hana::type_c< BaseB >, hana::type_c< BaseA > };
+	rod::source::type_index	source = tuple | rod::erase;
+
+	auto [b] = source | rod::resolve(q::instance{ q::as< BaseB* > }) | rod::get;
+	static_assert(std::is_same_v< decltype(b), BaseB* >);
+	REQUIRE( (*b)() == 2.5 );
+
+	source | rod::with([] (BaseB& b) {
+		REQUIRE( b() == 2.5 );
+	});
+
+	int sum = 0;
+	for(
+		BaseA& a:
+		source
+			| rod::resolve(q::instance{ q::as< BaseA& > })
+			| rod::get_all
+			| ranges::view::transform([] (auto&& e) -> decltype(auto) { return std::get<0>(e); })
+	) {
+		sum += a();
+	}
+	REQUIRE( sum == 30 );
 }

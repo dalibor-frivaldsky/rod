@@ -4,6 +4,7 @@
 #include <rod/feature/instance/instance>
 #include <rod/feature/type/base_of>
 #include <rod/feature/type/is>
+#include <rod/feature/type/of_base>
 #include <rod/feature/type/type>
 #include <rod/erase>
 #include <rod/get>

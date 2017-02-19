@@ -59,9 +59,10 @@ set(ROD_TEST_SOURCES
 	${ROD_TEST_DIR}/unit/rod/concept/CallableWith.spec.cpp
 	${ROD_TEST_DIR}/unit/rod/feature/instance/instance.spec.cpp
 	${ROD_TEST_DIR}/unit/rod/feature/instance/as.spec.cpp
-	${ROD_TEST_DIR}/unit/rod/feature/type/type.spec.cpp
-	${ROD_TEST_DIR}/unit/rod/feature/type/is.spec.cpp
 	${ROD_TEST_DIR}/unit/rod/feature/type/base_of.spec.cpp
+	${ROD_TEST_DIR}/unit/rod/feature/type/is.spec.cpp
+	${ROD_TEST_DIR}/unit/rod/feature/type/of_base.spec.cpp
+	${ROD_TEST_DIR}/unit/rod/feature/type/type.spec.cpp
 	${ROD_TEST_DIR}/unit/rod/pipe.spec.cpp
 	${ROD_TEST_DIR}/unit/rod/resolve.spec.cpp
 	${ROD_TEST_DIR}/unit/rod/source/build/entity.spec.cpp
