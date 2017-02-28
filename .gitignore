@@ -1,9 +1,11 @@
-playground
+/playground
 /build
-test/**/*.obj
-test/**/*.out
-test/**/*.exe
-target
+/test/**/*.obj
+/test/**/*.out
+/test/**/*.exe
+/target
+/examples/modules/build
+/examples/q-model-index/build
 
 rod.sublime-project
 rod.sublime-workspace
