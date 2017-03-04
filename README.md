@@ -1,5 +1,5 @@
 # What is rod?
-Rod is a header-only, lightweight feature resolution library for C++. In order to explain this, let's look at a short snippet of code and disect it.
+Rod is a header-only, lightweight feature resolution library for C++. In order to explain this, let's look at a short snippet of code:
 ```C++
 namespace q = rod::feature::query;
 auto [someTypePtr] = someObject | rod::resolve(q::instace{ q::as< SomeType* > }) | rod::get;
