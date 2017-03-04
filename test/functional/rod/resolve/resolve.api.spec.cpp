@@ -22,6 +22,10 @@ SCENARIO( "resolve API", "[functional]" ) {
 	auto [floatPtr] = tuple | rod::resolve(q::instance{ q::as< float* > }) | rod::get;
 	REQUIRE( floatPtr == &tuple[ hana::int_c<1> ] );
 	REQUIRE( *floatPtr == 5.0f );
+
+	auto [doubleRef] = tuple | rod::resolve(q::instance{ q::as< double& > }) | rod::get;
+	REQUIRE( &doubleRef == &tuple[ hana::int_c<2> ] );
+	REQUIRE( doubleRef == 2.5 );
 	
 	tuple | rod::with([] (int a, float& b, double* c) {
 		REQUIRE( a == 10 );
@@ -134,6 +138,18 @@ SCENARIO("Object hierarchy resolve API", "[functional]") {
 	tuple | rod::with([] (BaseB& b) {
 		REQUIRE( b() == 2.5 );
 	});
+
+	int sum = 0;
+	hana::for_each(
+		tuple | rod::resolve(q::instance{ q::as< BaseA& > }) | rod::get_all,
+		[&] (auto&& f) {
+			auto [baseARef] = f;
+			sum += baseARef();
+		});
+	REQUIRE( sum == 30 );
+
+	auto [baseADerivedType] = tuple | rod::resolve(q::type{ q::of_base< BaseA > }) | rod::get;
+	BOOST_HANA_CONSTANT_CHECK(baseADerivedType == hana::type_c< DerivedAA >);
 }
 
 SCENARIO("Object hierarchy type-erased resolve API", "[functional]") {
