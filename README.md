@@ -27,12 +27,12 @@ assert(i == 10);
 ```
 This will create a copy of the int value `10` from the tuple. Obtaining a pointer to one of the values in the tuple works similarly:
 ```C++
-auto [fPtr] = tuple | rod::resolve(q::instance{ q::as< float* > }) | rod::get;
+auto [fPtr] = primitives | rod::resolve(q::instance{ q::as< float* > }) | rod::get;
 assert(*fPtr == 5.0f);
 ```
 Obtaining references works as well:
 ```C++
-auto [dRef] = tuple | rod::resolve(q::instance{ q::as< double& > }) | rod::get;
+auto [dRef] = primitives | rod::resolve(q::instance{ q::as< double& > }) | rod::get;
 assert(dRef == 2.5);
 ```
 
@@ -65,3 +65,52 @@ auto [baseTypeOfDerivedB] = types | rod::resolve(q::type{ q::base_of< DerivedB >
 BOOST_HANA_CONSTANT_CHECK(baseTypeOfDerivedB == hana::type_c< Base >);
 ```
 To see more examples (also utilizing both instance and type feature queries), see the [resolve API functional test](test/functional/rod/resolve/resolve.api.spec.cpp).
+
+## rod::with ##
+The `rod::resolve` function object is a fairly low-level tool. But being, together with the feature queries, a core concept of the `rod` library, more user-friendly tools can be built on top of it. One such tool is `rod::with`. It takes a lambda, determines the types of the  expected arguments, resolves instances matching those arguments and calls the lambda with them:
+```C++
+primitives | rod::with([] (int a, float& b, double* c) {
+    assert(a == 10);
+    assert(b == 5.0f);
+    assert(*c == 2.5);
+});
+```
+
+## rod::erase and type-erased resolving ##
+There is a second `resolve source` provided by the `rod` library - `rod::source::type_index`. It's purpose is to enable type-erased, but still type-safe resolving of instance features. We can create such source using `rod::erase` tool on a `boost::hana::tuple` resolve source, like this:
+```C++
+rod::source::type_index erasedSource = primitives | rod::erase;
+```
+The type-erased source can be used the same way as `boost::hana::tuple` to resolve any instance features that can be resolved from the tuple:
+```C++
+auto [dRef] = erasedSource | rod::resolve(q::instance{ q::as< double& > }) | rod::get;
+erasedSource | rod::with([] (int a, float& b, double* c) {
+    assert(a == 10);
+    assert(b == 5.0f);
+    assert(*c == 2.5);
+});
+```
+There are two caveats. Since the types have been erased, resolving type features is not supported. Also due to type erasure, to support resolving instances of type hierarchies, the `resolve source` being erased needs to provide type features of any resolvable base types:
+```C++
+auto hierarchyWithBaseTypes = hana::tuple{ DerivedA{}, DerivedB{}, hana::type_c< Base > };
+auto erasedHierarchy = hierarchyWithBaseTypes | rod::erase;
+
+auto [baseRef] = erasedHierarchy | rod::resolve(q::instance{ q::as< Base& > }) | rod::get;
+```
+It also needs to be noted that the range returned from resolving the `rod::source::type_index` is not of boost::hana's `Monad` concept, but a view range from the `range-v3` library.
+
+### Modules example ###
+The type-erased `resolve source` can be used to pass it around your code base without making your functions into function templates (which would be needed when passing around `boost::hana::tuple` template). Another example is modularizing an application into modules/plugins in form of shared libraries. Such modules can expose single function returning the type-erased `rod::source::type_index` source and the application can query for various features provided by the modules. See the [modules](examples/modules) example for further info. The code is commented to provide additional information.
+
+## Creating new `resolve source`s ##
+It is possible to transform any type into a `resolve source`. We will not go into details here, but you can check the [q-model-index](examples/q-model-index) example to learn how to do so. The code is commented to guide you with the process.
+
+# Dependencies #
+  - C++ compiler supporting most of the C++17 features and concepts-lite (at the moment of writing, only trunk GCC with `-std=c++17 -fconcepts`)
+  - [Boost Hana](https://github.com/boostorg/hana)
+  - [range-v3](https://github.com/ericniebler/range-v3)
+  - [CallableTraits](https://github.com/badair/callable_traits)
+  - [Catch](https://github.com/philsquared/Catch) - for the tests
+  
+# License #
+The project is licensed under the [Boost software license](http://www.boost.org/users/license.html)
